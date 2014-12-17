@@ -10,7 +10,7 @@
 
     <form name="register" ng-submit="registerMe()">
         <input type="text" ng-model="register.username" name="email" placeholder="Username"/>
-        <input type="password" ng-model="register.password" name="pswd"  placeholder="Password"/>
+        <input type="password" ng-model="register.password" name="pswd" placeholder="Password"/>
         <button type="submit">Register</button>
         <div>Data: {{ data }}</div>
         <div>Status: {{ status }}</div>
@@ -47,9 +47,19 @@
 <div ng-controller="EstablishmentListCtrl">
     <button type="button" ng-click="getEstablishments()">Get establishments</button>
     <ul>
-        <li ng-repeat="e in establishments">#{{ e.id }}: {{ e.name }}, {{ e.address }}, {{ e.schedule }}, {{ e.contacts }}</li>
+        <li ng-repeat="e in establishments">
+            #{{ e.id }}: {{ e.name }}, {{ e.address }}, {{ e.schedule }}, {{ e.contacts }}</li>
     </ul>
     {{ establishments }}
+</div>
+
+<div ng-controller="DeliveryCtl">
+    <form name="delivery" ng-submit="makeOrder()">
+        EstablishmentID: <input type="text" ng-model="delivery.establishment_id"/>
+        Address: <input type="text" ng-model="delivery.address"/>
+        Contacts: <input type="text" ng-model="delivery.contacts"/>
+        <button type="submit">Make Delivery</button>
+    </form>
 </div>
 
 </body>

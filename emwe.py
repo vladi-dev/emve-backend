@@ -9,7 +9,8 @@ from flask.ext.security.utils import verify_password
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.cors import CORS
-from flask_jwt import JWT, jwt_required
+from flask_jwt import JWT, jwt_required, current_user as jwt_user
+
 
 # Create app
 app = Flask(__name__)
@@ -54,6 +55,7 @@ class User(db.Model, UserMixin):
     confirmed_at = db.Column(db.DateTime())
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
+    deliveries = db.relationship('Delivery', backref=db.backref('user'))
 
 
 class Category(db.Model):
@@ -73,6 +75,17 @@ class Establishment(db.Model):
     address = db.Column(db.Text())
     schedule = db.Column(db.Text())
     contacts = db.Column(db.Text())
+
+    def __unicode__(self):
+        return self.name
+
+class Delivery(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    establishment_id = db.Column(db.Integer, db.ForeignKey('establishment.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    address = db.Column(db.Text())
+    contacts = db.Column(db.Text())
+
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -154,10 +167,32 @@ def categories():
 
 @app.route('/api/establishment/<int:category_id>', methods=['GET'])
 @jwt_required()
-def establishment():
-    query = Establishment.query.all()
+def establishment(category_id):
+    query = Establishment.query.filter_by(category_id=category_id).all()
     establishments = []
     for r in query:
         establishments.append({'id': r.id, 'name': r.name, 'address': r.address, 'schedule': r.schedule, 'contacts': r.contacts})
 
     return jsonify({'establishments': establishments})
+
+@app.route('/api/delivery', methods=['POST'])
+@jwt_required()
+def delivery():
+    data = request.get_json(force=True)
+    address = data.get('address', None)
+    contacts = data.get('contacts', None)
+    establishment_id = data.get('establishment_id', None)
+
+    if not establishment_id:
+        return jsonify({'errors': {'_': 'Provide establishment'}}), 400
+
+    try:
+        establishment = Establishment.query.filter_by(id=establishment_id).one()
+    except Exception:
+        return jsonify({'errors': {'_': 'Unknown establishment'}}), 400
+
+    d = Delivery(address=address, contacts=contacts, establishment_id=establishment.id, user_id=jwt_user.id)
+    db.session.add(d)
+    db.session.commit()
+
+    return jsonify({'success': 1})
