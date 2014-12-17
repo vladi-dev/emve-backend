@@ -15,7 +15,7 @@ from flask_jwt import JWT, jwt_required
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = 'super-secret'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://amwe:123123@localhost/amwe')
 app.config['JWT_EXPIRATION_DELTA'] = 900000
 
 jwt = JWT(app)
@@ -60,7 +60,19 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     image = db.Column(db.String(255))
+    establishments = db.relationship('Establishment', backref='category')
 
+    def __unicode__(self):
+        return self.name
+
+class Establishment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
+    name = db.Column(db.String(255))
+    image = db.Column(db.String(255))
+    address = db.Column(db.Text())
+    schedule = db.Column(db.Text())
+    contacts = db.Column(db.Text())
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -87,6 +99,7 @@ class SecureModelView(ModelView):
 
 
 admin.add_view(SecureModelView(Category, db.session, url='category'))
+admin.add_view(SecureModelView(Establishment, db.session, url='establishment'))
 
 
 # Views
@@ -129,7 +142,6 @@ def load_user(payload):
     user = user_datastore.find_user(id=payload['user_id'])
     return user
 
-
 @app.route('/api/category', methods=['GET'])
 @jwt_required()
 def categories():
@@ -139,3 +151,13 @@ def categories():
         categories.append({'id': c.id, 'name': c.name})
     return jsonify({'categories': categories})
 
+
+@app.route('/api/establishment/<int:category_id>', methods=['GET'])
+@jwt_required()
+def establishment():
+    query = Establishment.query.all()
+    establishments = []
+    for r in query:
+        establishments.append({'id': r.id, 'name': r.name, 'address': r.address, 'schedule': r.schedule, 'contacts': r.contacts})
+
+    return jsonify({'establishments': establishments})

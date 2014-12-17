@@ -1,6 +1,6 @@
 var emweApp = angular.module('emweApp', []);
 var host = 'http://127.0.0.1:5000';
-var host = 'http://amwe.herokuapp.com';
+//var host = 'http://amwe.herokuapp.com';
 
 emweApp.controller('RegisterCtrl', function ($scope, $http, $window) {
     $scope.registerMe = function () {
@@ -9,6 +9,7 @@ emweApp.controller('RegisterCtrl', function ($scope, $http, $window) {
                 alert(1)
             })
             .error(function (data, status, headers, config) {
+                               $scope.login_error = data.errors['username'];
                 $scope.data = data
                 $scope.status = status
                 $scope.headers = headers
@@ -28,10 +29,10 @@ emweApp.controller('BodyCtrl', function ($scope, $http, $window) {
                 $scope.token = $window.sessionStorage.token;
             })
             .error(function (data, status, headers, config) {
-                $scope.data = data
-                $scope.status = status
-                $scope.headers = headers
-                $scope.config = config
+                $scope.data = data;
+                $scope.status = status;
+                $scope.headers = headers;
+                $scope.config = config;
 
                 delete $window.sessionStorage.token;
             });
@@ -47,6 +48,14 @@ emweApp.controller('CategoryListCtrl', function ($scope, $http) {
     }
 });
 
+
+emweApp.controller('EstablishmentListCtrl', function ($scope, $http) {
+    $scope.getEstablishments = function () {
+        $http.get(host + '/api/establishment').success(function (data) {
+            $scope.establishments = data.establishments;
+        });
+    }
+});
 
 emweApp.factory('authInterceptor', function ($rootScope, $q, $window) {
     return {

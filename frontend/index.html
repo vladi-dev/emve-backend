@@ -44,5 +44,13 @@
 </div>
 
 
+<div ng-controller="EstablishmentListCtrl">
+    <button type="button" ng-click="getEstablishments()">Get establishments</button>
+    <ul>
+        <li ng-repeat="e in establishments">#{{ e.id }}: {{ e.name }}, {{ e.address }}, {{ e.schedule }}, {{ e.contacts }}</li>
+    </ul>
+    {{ establishments }}
+</div>
+
 </body>
 </html>
