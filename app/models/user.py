@@ -25,3 +25,6 @@ class User(db.Model, UserMixin):
                             backref=db.backref('users', lazy='dynamic'))
     deliveries = db.relationship('Delivery', backref=db.backref('user'))
 
+    def __unicode__(self):
+        return self.email
+
