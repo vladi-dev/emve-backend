@@ -1,0 +1,9 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+    {% if current_user.is_authenticated() %}
+        Hello {{ current_user.email }} <br/>
+        You can <a href="{{ url_for_security('logout') }}">Logout</a>
+    {% else %}
+        <a href="{{ url_for_security('login') }}">Login</a>
+    {% endif %}
+{% endblock %}
