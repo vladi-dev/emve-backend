@@ -1,4 +1,7 @@
 Hello World from MyView!
 
 {% if current_user %}
-<a href="{{ url_for_security('login') }}">Login</a>
+    <a href="{{ url_for_security('logout') }}">Logout</a>
+{% else %}
+    <a href="{{ url_for_security('login') }}">Login</a>
+{% endif %}
