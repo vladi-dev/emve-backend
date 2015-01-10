@@ -1,5 +1,5 @@
 var emweApp = angular.module('emweApp', []);
-var host = 'http://127.0.0.1:5000';
+var host = 'http://emve.dev:5000/api';
 //var host = 'http://amwe.herokuapp.com';
 
 emweApp.controller('RegisterCtrl', function ($scope, $http, $window) {
@@ -23,7 +23,7 @@ emweApp.controller('RegisterCtrl', function ($scope, $http, $window) {
 emweApp.controller('BodyCtrl', function ($scope, $http, $window) {
     $scope.token = $window.sessionStorage.token;
     $scope.loginMe = function () {
-        $http.post(host + '/auth', $scope.login)
+        $http.post(host + '/login', $scope.login)
             .success(function (data, status, headers, config) {
                          $window.sessionStorage.token = data.token;
                          $scope.token = $window.sessionStorage.token;
@@ -42,7 +42,7 @@ emweApp.controller('BodyCtrl', function ($scope, $http, $window) {
 
 emweApp.controller('CategoryListCtrl', function ($scope, $http) {
     $scope.getCategories = function () {
-        $http.get(host + '/api/category').success(function (data) {
+        $http.get(host + '/category').success(function (data) {
             $scope.categories = data.categories;
         });
     }
@@ -51,7 +51,7 @@ emweApp.controller('CategoryListCtrl', function ($scope, $http) {
 
 emweApp.controller('EstablishmentListCtrl', function ($scope, $http) {
     $scope.getEstablishments = function () {
-        $http.get(host + '/api/establishment/2').success(function (data) {
+        $http.get(host + '/establishment/2').success(function (data) {
             $scope.establishments = data.establishments;
         });
     }
@@ -78,7 +78,7 @@ emweApp.factory('authInterceptor', function ($rootScope, $q, $window) {
 emweApp.controller('DeliveryCtl', function ($scope, $http, $window) {
 
     $scope.makeOrder = function () {
-        $http.post(host + '/api/delivery', $scope.delivery)
+        $http.post(host + '/delivery', $scope.delivery)
             .success(function (data, status, headers, config) {
                          alert(1);
                      })

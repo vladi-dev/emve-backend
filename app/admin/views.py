@@ -1,7 +1,5 @@
-from flask.ext.admin.contrib.sqla import ModelView
-
-from app import current_user
-
+from flask_admin.contrib.sqla import ModelView
+from flask_security import current_user
 from app.models.category import Category
 from app.models.establishment import Establishment
 from app.models.user import User
