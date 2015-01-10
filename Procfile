@@ -1,1 +1,1 @@
-web: gunicorn amwy:app
+web: gunicorn app:app
