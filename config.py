@@ -3,7 +3,7 @@ import os
 
 DEBUG = True
 
-SERVER_NAME = 'emve.dev:5000'
+# SERVER_NAME = 'emve.dev:5000'
 
 SECRET_KEY = 'super-secret'
 
