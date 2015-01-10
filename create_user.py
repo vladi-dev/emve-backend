@@ -1,4 +1,4 @@
-from emwe import db, user_datastore
+from app import db, user_datastore
 
 db.drop_all()
 db.create_all()
