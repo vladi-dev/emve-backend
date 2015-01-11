@@ -1,6 +1,6 @@
 var emweApp = angular.module('emweApp', []);
 var host = 'http://emve.dev:5000/api';
-//var host = 'http://amwe.herokuapp.com';
+var host = 'http://emve.herokuapp.com/api';
 
 emweApp.controller('RegisterCtrl', function ($scope, $http, $window) {
     $scope.registerMe = function () {
