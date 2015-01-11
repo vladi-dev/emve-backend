@@ -5,17 +5,14 @@ from flask_jwt import jwt_required
 from app.models.establishment import Establishment
 
 class EstablishmentAPI(MethodView):
-    url = '/establishment/<int:category_id>'
+    url = '/establishment/<int:establishment_id>'
 
     @jwt_required()
-    def get(self, category_id):
-        query = Establishment.query.filter_by(category_id=category_id).all()
-        establishments = []
-        for r in query:
-            establishments.append(
-                {'id': r.id, 'name': r.name, 'address': r.address, 'schedule': r.schedule, 'contacts': r.contacts})
+    def get(self, establishment_id):
+        e = Establishment.query.filter_by(id=establishment_id).one()
+        establishment = {'name': e.name, 'address': e.address, 'schedule': e.schedule, 'contacts': e.contacts}
 
-        return jsonify({'establishments': establishments})
+        return jsonify({'establishment': establishment})
 
     @classmethod
     def register(cls, mod):
