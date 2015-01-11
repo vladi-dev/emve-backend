@@ -10,7 +10,7 @@ class EstablishmentAPI(MethodView):
     @jwt_required()
     def get(self, establishment_id):
         e = Establishment.query.filter_by(id=establishment_id).one()
-        establishment = {'name': e.name, 'address': e.address, 'schedule': e.schedule, 'contacts': e.contacts}
+        establishment = {'id': e.id, 'name': e.name, 'address': e.address, 'schedule': e.schedule, 'contacts': e.contacts}
 
         return jsonify({'establishment': establishment})
 
