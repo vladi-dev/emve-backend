@@ -5,18 +5,20 @@ from flask_jwt import jwt_required
 from app.models.category import Category
 from app.models.establishment import Establishment
 
+
 class CategoryAPI(MethodView):
     url = '/category/<int:category_id>'
 
     @jwt_required()
     def get(self, category_id=None):
         if category_id is not None:
-            query = Establishment.query.filter_by(category_id=category_id).all()
+            category = Category.query.filter_by(id=category_id).one()
+            query = Establishment.query.filter_by(category_id=category.id).all()
             establishments = []
             for r in query:
                 establishments.append(
                     {'id': r.id, 'name': r.name, 'address': r.address, 'schedule': r.schedule, 'contacts': r.contacts})
-            return jsonify({'establishments': establishments})
+            return jsonify({'establishments': establishments, 'category': {'name': category.name}})
         else:
             query = Category.query.all()
             categories = []
