@@ -18,7 +18,7 @@ class CategoryAPI(MethodView):
             for r in query:
                 establishments.append(
                     {'id': r.id, 'name': r.name, 'address': r.address, 'schedule': r.schedule, 'contacts': r.contacts})
-            return jsonify({'establishments': establishments, 'category': {'name': category.name}})
+            return jsonify({'establishments': establishments, 'category': {'id': category.id, 'name': category.name}})
         else:
             query = Category.query.all()
             categories = []
