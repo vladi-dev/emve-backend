@@ -18,7 +18,7 @@ class DeliveryAPI(MethodView):
         contacts = data.get('contacts', None)
         establishment_id = data.get('establishment_id', None)
 
-        if not all(order, address, contacts, establishment_id):
+        if not all((order, address, contacts, establishment_id)):
             return jsonify({'errors': {'_': 'Fill in all fields'}}), 400
 
         try:
