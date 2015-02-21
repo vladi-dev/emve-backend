@@ -13,8 +13,8 @@ class Establishment(db.Model):
 class EstablishmentLocation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     establishment_id = db.Column(db.Integer, db.ForeignKey('establishment.id'))
-    address = db.Column(db.Text())
     schedule = db.Column(db.Text())
     contacts = db.Column(db.Text())
+    address = db.Column(db.String(255))
     point = db.Column(Geometry('POINT'))
 
