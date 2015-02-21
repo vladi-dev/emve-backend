@@ -1,15 +1,22 @@
 from flask_admin.contrib.sqla import ModelView
 from flask_security import current_user
+from flask_admin.contrib.geoa import ModelView as GeoModelView
 from app.models.category import Category
-from app.models.establishment import Establishment
+from app.models.establishment import Establishment, EstablishmentLocation
 from app.models.user import User
 from app.models.delivery import Delivery
 
 
 
-class SecureModelView(ModelView):
+class SecureModelVideoMixin(object):
     def is_accessible(self):
         return current_user.is_authenticated()
+
+class SecureModelView(SecureModelVideoMixin, ModelView):
+    pass
+
+class SecureGeoModelView(SecureModelVideoMixin, GeoModelView):
+    pass
 
 class CategoryModelView(SecureModelView):
     column_list = ('name', 'image')
@@ -37,3 +44,7 @@ class DeliveryModelView(SecureModelView):
     def __init__(self, session, **kwargs):
         super(DeliveryModelView, self).__init__(Delivery, session, url='delivery', **kwargs)
 
+
+class EstablishmentLocationModelView(SecureGeoModelView):
+    def __init__(self, session, **kwargs):
+        super(EstablishmentLocationModelView, self).__init__(EstablishmentLocation, session, url='establishment_location', **kwargs)

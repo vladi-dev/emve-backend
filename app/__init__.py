@@ -47,10 +47,11 @@ security = Security(app, user_datastore)
 # Admin
 adm = Admin(app, name='Emve')
 
-from admin.views import CategoryModelView, EstablishmentModelView, UserModelView, DeliveryModelView
+from admin.views import CategoryModelView, EstablishmentModelView, EstablishmentLocationModelView, UserModelView, DeliveryModelView
 
 adm.add_view(CategoryModelView(db.session))
 adm.add_view(EstablishmentModelView(db.session))
+adm.add_view(EstablishmentLocationModelView(db.session))
 adm.add_view(UserModelView(db.session))
 adm.add_view(DeliveryModelView(db.session))
 

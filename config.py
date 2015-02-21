@@ -8,7 +8,7 @@ DEBUG = True
 SECRET_KEY = 'super-secret'
 
 # Database
-SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://amwe:123123@localhost/amwe')
+SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://emve:123123@localhost/emve')
 
 # JWT
 JWT_EXPIRATION_DELTA = 900000
@@ -28,3 +28,8 @@ SECURITY_POST_LOGIN_VIEW = '/admin/'
 SECURITY_POST_LOGOUT_VIEW = '/admin/'
 SECURITY_PASSWORD_HASH = 'bcrypt'
 SECURITY_PASSWORD_SALT = 'n5ieDVxeTvHbiweuiwJo6w'
+
+
+# Map
+MAPBOX_MAP_ID = 'emve-dev.l8pjd86f'
+MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZW12ZS1kZXYiLCJhIjoiNWo4dEVUWSJ9._AFAtSxwrUNknqpVkzdYZw'
