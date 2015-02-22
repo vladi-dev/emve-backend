@@ -6,6 +6,7 @@ class Establishment(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     name = db.Column(db.String(255))
     image = db.Column(db.String(255))
+    locations = db.relationship('EstablishmentLocation', backref='establishment')
 
     def __unicode__(self):
         return self.name
@@ -18,3 +19,5 @@ class EstablishmentLocation(db.Model):
     address = db.Column(db.String(255))
     point = db.Column(Geometry('POINT'))
 
+    def __unicode__(self):
+        return self.address

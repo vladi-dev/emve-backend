@@ -29,6 +29,7 @@ class CategoryModelView(SecureModelView):
 
 class EstablishmentModelView(SecureModelView):
     column_searchable_list = ('name',)
+    form_columns = ('category', 'name', 'image')
 
     def __init__(self, session, **kwargs):
         super(EstablishmentModelView, self).__init__(Establishment, session, url='establishment', **kwargs)
@@ -46,5 +47,7 @@ class DeliveryModelView(SecureModelView):
 
 
 class EstablishmentLocationModelView(SecureGeoModelView):
+    form_args = dict(point=dict(geocoding='address'))
+
     def __init__(self, session, **kwargs):
         super(EstablishmentLocationModelView, self).__init__(EstablishmentLocation, session, url='establishment_location', **kwargs)
