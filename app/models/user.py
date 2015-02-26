@@ -24,7 +24,17 @@ class User(db.Model, UserMixin):
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
     deliveries = db.relationship('Delivery', backref=db.backref('user'))
+    addresses = db.relationship('UserAddress', backref=db.backref('user'))
 
     def __unicode__(self):
         return self.email
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+        }
+
+
 

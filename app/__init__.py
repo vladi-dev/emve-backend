@@ -35,6 +35,7 @@ db = SQLAlchemy(app)
 
 # Import models
 from app.models.user import User, Role
+from app.models.user_address import UserAddress
 from app.models.category import Category
 from app.models.establishment import Establishment
 from app.models.delivery import Delivery
