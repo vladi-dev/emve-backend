@@ -6,8 +6,8 @@ from app import db
 from app.models.user_address import UserAddress
 
 
-class AddressAPI(MethodView):
-    url = '/address'
+class UserAddressAPI(MethodView):
+    url = '/user_address'
 
     @jwt_required()
     def get(self):
@@ -50,7 +50,7 @@ class AddressAPI(MethodView):
 
     @classmethod
     def register(cls, mod):
-        symfunc = cls.as_view('address_api')
+        symfunc = cls.as_view('user_address_api')
         mod.add_url_rule(cls.url, view_func=symfunc, methods=['GET', 'PUT'])
-        mod.add_url_rule('/address/<int:user_address_id>', view_func=symfunc, methods=['DELETE'])
+        mod.add_url_rule(cls.url + '/<int:user_address_id>', view_func=symfunc, methods=['DELETE'])
 
