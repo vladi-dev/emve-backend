@@ -25,6 +25,10 @@ class User(db.Model, UserMixin):
                             backref=db.backref('users', lazy='dynamic'))
     deliveries = db.relationship('Delivery', backref=db.backref('user'))
     addresses = db.relationship('UserAddress', backref=db.backref('user'))
+    first_name = db.Column(db.String(255))
+    last_name = db.Column(db.String(255))
+    middle_name = db.Column(db.String(255))
+    phone = db.Column(db.String(255))
 
     def __unicode__(self):
         return self.email
