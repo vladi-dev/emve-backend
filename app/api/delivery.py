@@ -3,30 +3,45 @@ from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
 from app import db
-from app.models.establishment import Establishment
 from app.models.delivery import Delivery
+from app.models.user_address import UserAddress
 
 
 class DeliveryAPI(MethodView):
-    url = '/delivery'
 
     @jwt_required()
-    def post(self):
+    def get(self, id=None):
+        if id is not None:
+            try:
+                delivery = Delivery.query.filter_by(id=id).one()
+                return jsonify(delivery=delivery.serialize)
+            except Exception as e:
+                return jsonify({'errors': {'_': 'Invalid delivery id'}}), 400
+
+        deliveries = Delivery.query
+        return jsonify(deliveries=[d.serialize for d in deliveries.all()])
+
+    @jwt_required()
+    def put(self):
         data = request.get_json(force=True)
         order = data.get('order', None)
-        address = data.get('address', None)
-        contacts = data.get('contacts', None)
-        establishment_id = data.get('establishment_id', None)
+        special_instructions = data.get('special_instructions', None)
+        pickup_address = data.get('pickup_address', None)
+        user_address_id = data.get('user_address_id', None)
 
-        if not all((order, address, contacts, establishment_id)):
+        if not all((order, special_instructions, pickup_address, user_address_id)):
             return jsonify({'errors': {'_': 'Fill in all fields'}}), 400
 
         try:
-            establishment = Establishment.query.filter_by(id=establishment_id).one()
-        except Exception:
-            return jsonify({'errors': {'_': 'Unknown establishment'}}), 400
+            user_address = UserAddress.query.filter_by(id=user_address_id, user_id=current_user.id).one()
+        except Exception as e:
+            return jsonify({'errors': {'_': 'Invalid user address id'}}), 400
 
-        d = Delivery(order=order, address=address, contacts=contacts, establishment_id=establishment.id, user_id=current_user.id)
+        if not current_user.phone:
+            return jsonify({'errors': {'_': 'Invalid user phone'}}), 400
+
+        d = Delivery(order=order, special_instructions=special_instructions, pickup_address=pickup_address,
+                     user_id=current_user.id, delivery_address=user_address.__unicode__(), coord=user_address.coord, phone=current_user.phone)
         db.session.add(d)
         db.session.commit()
 
@@ -34,5 +49,7 @@ class DeliveryAPI(MethodView):
 
     @classmethod
     def register(cls, mod):
+        url = '/delivery'
         symfunc = cls.as_view('delivery_api')
-        mod.add_url_rule(cls.url, view_func=symfunc, methods=['POST'])
+        mod.add_url_rule(url, view_func=symfunc, methods=['PUT', 'GET'], defaults={"id": None})
+        mod.add_url_rule(url + "/<int:id>", view_func=symfunc, methods=['GET'])

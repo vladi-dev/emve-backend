@@ -6,7 +6,7 @@ from app import db
 from app.models.user_address import UserAddress
 
 
-class UserAddressAPI(MethodView):
+class UsersAddressesAPI(MethodView):
 
     @jwt_required()
     def get(self):
@@ -24,12 +24,18 @@ class UserAddressAPI(MethodView):
         city = data.get('city', None)
         state = data.get('state', None)
         zip = data.get('zip', None)
+        lat = data.get('lat', None)
+        lng  = data.get('lng', None)
+        if not lat and lng:
+            return jsonify({'errors': {'_': 'Fill in lat and lng'}}), 400
+
+        coord = "POINT({} {})".format(lng, lat)
 
         if not all((label, house, street, city, state, zip)):
             return jsonify({'errors': {'_': 'Fill in all fields'}}), 400
 
         a = UserAddress(label=label, house=house, street=street, unit=unit, city=city, state=state, zip=zip,
-                        user_id=current_user.id)
+                        user_id=current_user.id, coord=coord)
         db.session.add(a)
         db.session.commit()
 
@@ -49,8 +55,8 @@ class UserAddressAPI(MethodView):
 
     @classmethod
     def register(cls, mod):
-        url = '/user/address'
-        symfunc = cls.as_view('user_address_api')
+        url = '/users/addresses'
+        symfunc = cls.as_view('users_addresses_api')
         mod.add_url_rule(url, view_func=symfunc, methods=['GET', 'PUT'])
         mod.add_url_rule(url + '/<int:user_address_id>', view_func=symfunc, methods=['DELETE'])
 

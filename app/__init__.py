@@ -36,8 +36,6 @@ db = SQLAlchemy(app)
 # Import models
 from app.models.user import User, Role
 from app.models.user_address import UserAddress
-from app.models.category import Category
-from app.models.establishment import Establishment
 from app.models.delivery import Delivery
 
 # Setup Flask-Security
@@ -48,17 +46,14 @@ security = Security(app, user_datastore)
 # Admin
 adm = Admin(app, name='Emve')
 
-from admin.views import CategoryModelView, EstablishmentModelView, EstablishmentLocationModelView, UserModelView, DeliveryModelView
+from admin.views import UserModelView, UserAddressModelView, DeliveryModelView
 
-adm.add_view(CategoryModelView(db.session))
-adm.add_view(EstablishmentModelView(db.session))
-adm.add_view(EstablishmentLocationModelView(db.session))
 adm.add_view(UserModelView(db.session))
+adm.add_view(UserAddressModelView(db.session))
 adm.add_view(DeliveryModelView(db.session))
 
 
 # Views
-#from api.category import views...
 from app.api.views import mod as api
 app.register_blueprint(api)
 
