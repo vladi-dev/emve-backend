@@ -22,7 +22,7 @@ class DeliveryAPI(MethodView):
         return jsonify(deliveries=[d.serialize for d in deliveries.all()])
 
     @jwt_required()
-    def put(self):
+    def put(self, id=None):
         data = request.get_json(force=True)
         order = data.get('order', None)
         special_instructions = data.get('special_instructions', None)
