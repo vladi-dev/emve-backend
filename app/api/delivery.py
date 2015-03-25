@@ -22,7 +22,7 @@ class DeliveryAPI(MethodView):
         return jsonify(deliveries=[d.serialize for d in deliveries.all()])
 
     @jwt_required()
-    def put(self, id=None):
+    def put(self):
         data = request.get_json(force=True)
         order = data.get('order', None)
         special_instructions = data.get('special_instructions', None)
@@ -51,5 +51,5 @@ class DeliveryAPI(MethodView):
     def register(cls, mod):
         url = '/delivery'
         symfunc = cls.as_view('delivery_api')
-        mod.add_url_rule(url, view_func=symfunc, methods=['PUT', 'GET'], defaults={"id": None})
+        mod.add_url_rule(url, view_func=symfunc, methods=['PUT', 'GET'])
         mod.add_url_rule(url + "/<int:id>", view_func=symfunc, methods=['GET'])
