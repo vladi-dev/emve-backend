@@ -3,7 +3,7 @@ from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
 from app import db
-from app.models.delivery import Delivery
+from app.models.delivery import Delivery, DeliveryStatus
 from app.models.user_address import UserAddress
 
 
@@ -40,8 +40,15 @@ class DeliveryAPI(MethodView):
         if not current_user.phone:
             return jsonify({'errors': {'_': 'Invalid user phone'}}), 400
 
+        try:
+            status = DeliveryStatus.query.filter_by(name='new').one()
+        except Exception as e:
+            return jsonify({'errors': {'_': 'Status NEW not found'}}), 400
+
         d = Delivery(order=order, special_instructions=special_instructions, pickup_address=pickup_address,
-                     user_id=current_user.id, delivery_address=user_address.__unicode__(), coord=user_address.coord, phone=current_user.phone)
+                     status_id=status.id,
+                     user_id=current_user.id, delivery_address=user_address.__unicode__(), coord=user_address.coord,
+                     phone=current_user.phone)
         db.session.add(d)
         db.session.commit()
 

@@ -6,6 +6,11 @@ from app import db
 class Delivery(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('deliveries'))
+    status_id = db.Column(db.Integer, db.ForeignKey('delivery_status.id'))
+    statuses = db.relationship('DeliveryStatus', backref=db.backref('deliveries'))
+    transporter_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    transporter = db.relationship('User', foreign_keys=[transporter_id], backref=db.backref('accepted_deliveries'))
     order = db.Column(db.Text())
     special_instructions = db.Column(db.Text())
     pickup_address = db.Column(db.Text())
@@ -30,3 +35,26 @@ class Delivery(db.Model):
             'lng': lng
         }
 
+    def activate(self, transporter):
+        status = DeliveryStatus.query.filter_by(name='accepted').one()
+
+        print(self.transporter_id)
+
+        if self.status_id == status.id or self.transporter_id is not None:
+            raise Exception('Delivery already accepted')
+
+        if self.user_id == transporter.id:
+            raise Exception('You cannot accept delivery that you\'ve ordered')
+
+        self.status_id = status.id
+        self.transporter_id = transporter.id
+        db.session.add(self)
+        db.session.commit()
+
+
+class DeliveryStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text())
+
+class DeliveryAlreadyAcceptedException(Exception):
+    pass
