@@ -38,13 +38,16 @@ class Delivery(db.Model):
     def activate(self, transporter):
         status = DeliveryStatus.query.filter_by(name='accepted').one()
 
-        print(self.transporter_id)
-
         if self.status_id == status.id or self.transporter_id is not None:
             raise Exception('Delivery already accepted')
 
         if self.user_id == transporter.id:
             raise Exception('You cannot accept delivery that you\'ve ordered')
+
+        active_count = self.query.filter_by(transporter_id=transporter.id, status_id=status.id).count()
+
+        if active_count:
+            raise Exception('You already have accepted another delivery')
 
         self.status_id = status.id
         self.transporter_id = transporter.id
@@ -56,5 +59,6 @@ class DeliveryStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text())
 
-class DeliveryAlreadyAcceptedException(Exception):
-    pass
+    @classmethod
+    def getNew(cls):
+        return cls.query.filter_by(name='new').one()

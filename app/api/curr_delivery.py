@@ -6,21 +6,20 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.models.delivery import Delivery
 
 
-class DeliveryStateAPI(MethodView):
+class CurrDeliveryAPI(MethodView):
 
     @jwt_required()
-    def post(self, id, action):
+    def get(self):
         try:
-            delivery = Delivery.query.filter_by(id=id).one()
-            delivery.activate(current_user)
+            delivery = Delivery.query.filter_by(transporter_id=current_user.id).one()
             return jsonify(delivery=delivery.serialize)
         except NoResultFound as e:
-            return jsonify({'errors': {'_': 'Invalid delivery id'}}), 400
+            return jsonify({'errors': {'_': 'No delivery'}})
         except Exception as e:
             return jsonify({'errors': {'_': e.__unicode__()}}), 400
 
     @classmethod
     def register(cls, mod):
-        url = '/delivery/<int:id>/<action>'
-        symfunc = cls.as_view('delivery_state_api')
-        mod.add_url_rule(url, view_func=symfunc, methods=['POST'])
+        url = '/curr-delivery'
+        symfunc = cls.as_view('curr_delivery_api')
+        mod.add_url_rule(url, view_func=symfunc, methods=['GET'])

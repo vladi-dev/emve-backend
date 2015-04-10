@@ -11,14 +11,15 @@ class DeliveryAPI(MethodView):
 
     @jwt_required()
     def get(self, id=None):
+        status = DeliveryStatus.getNew()
         if id is not None:
             try:
-                delivery = Delivery.query.filter_by(id=id).one()
+                delivery = Delivery.query.filter_by(id=id, status_id=status.id).one()
                 return jsonify(delivery=delivery.serialize)
             except Exception as e:
                 return jsonify({'errors': {'_': 'Invalid delivery id'}}), 400
 
-        deliveries = Delivery.query
+        deliveries = Delivery.query.filter_by(status_id=status.id)
         return jsonify(deliveries=[d.serialize for d in deliveries.all()])
 
     @jwt_required()
