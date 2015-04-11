@@ -26,7 +26,7 @@ with app.app_context():
                                state='CA', zip='92704', coord='01010000005F240074C2795DC065551A6E6DD94040')
 
     user_vals = [dict(email = 'admin@emve.la', password = password, phone = phone, first_name = first_name, middle_name = middle_name, last_name = last_name),
-                 dict(email = 'client@gmail.com', password=password, phone=phone, first_name='Sam', middle_name='L', last_name='Jackson', addresses=[client_address]),
+                 dict(email = 'client@gmail.com', password=password, phone=phone, first_name='Sam', middle_name='L', last_name='Jackson', addresses=[home_address, office_address]),
                  dict(email = 'transp@gmail.com', password=password, phone=phone, first_name='John', middle_name='H', last_name='Travolta')
     ]
     user_datastore.create_user(**user_vals[0])
