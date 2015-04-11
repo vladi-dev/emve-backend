@@ -37,7 +37,7 @@ with app.app_context():
     delivery = Delivery(status_id=status.id,
                         order='Caramel Machiato, Cheese Bacon and Egg Burger, Croassaint, Cheese Danish',
                         special_instructions='Warm please', pickup_address='Closest Starbucks',
-                        delivery_address=client_address.__unicode__(), user_id=client.id, phone=client.phone, coord=client_address.coord)
+                        delivery_address=home_address.__unicode__(), user_id=client.id, phone=client.phone, coord=home_address.coord)
 
     db.session.add(delivery)
 
