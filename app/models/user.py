@@ -36,8 +36,7 @@ class User(db.Model, UserMixin):
     def serialize(self):
         return {
             'id': self.id,
-            'email': self.email,
+            'email': self.email
         }
-
 
 
