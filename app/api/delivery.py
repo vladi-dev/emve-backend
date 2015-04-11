@@ -1,3 +1,5 @@
+from random import randrange
+
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
@@ -46,10 +48,12 @@ class DeliveryAPI(MethodView):
         except Exception as e:
             return jsonify({'errors': {'_': 'Status NEW not found'}}), 400
 
+        pin = randrange(1111,9999)
+
         d = Delivery(order=order, special_instructions=special_instructions, pickup_address=pickup_address,
                      status_id=status.id,
                      user_id=current_user.id, delivery_address=user_address.__unicode__(), coord=user_address.coord,
-                     phone=current_user.phone)
+                     phone=current_user.phone, pin=pin)
         db.session.add(d)
         db.session.commit()
 

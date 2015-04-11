@@ -16,6 +16,7 @@ class Delivery(db.Model):
     pickup_address = db.Column(db.Text())
     delivery_address = db.Column(db.Text())
     phone = db.Column(db.Text())
+    pin = db.Column(db.SmallInteger())
     coord = db.Column(Geometry("POINT"))
 
     @property
@@ -31,8 +32,10 @@ class Delivery(db.Model):
             'pickup_address': self.pickup_address,
             'delivery_address': self.delivery_address,
             'phone': self.phone,
+            'pin': self.pin, # todo remove for transp
             'lat': lat,
-            'lng': lng
+            'lng': lng,
+            'transporter': self.transporter.serialize if self.transporter_id else None
         }
 
     def activate(self, transporter):

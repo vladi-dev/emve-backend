@@ -11,13 +11,11 @@ class ClientCurrOrdersAPI(MethodView):
     @jwt_required()
     def get(self, id=None):
         try:
-            status = DeliveryStatus.query.filter_by(name='new').one()
-
             if id is not None:
-                order = Delivery.query.filter_by(id=id, status_id=status.id).one()
+                order = Delivery.query.filter_by(id=id).one()
                 return jsonify(order=order.serialize)
 
-            orders = Delivery.query.filter_by(user_id=current_user.id, status_id=status.id).all()
+            orders = Delivery.query.filter_by(user_id=current_user.id).all()
             return jsonify(orders=[o.serialize for o in orders])
         except Exception as e:
             return jsonify({'errors': {'_': e.__unicode__()}}), 400

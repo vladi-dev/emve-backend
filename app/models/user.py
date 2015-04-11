@@ -36,7 +36,8 @@ class User(db.Model, UserMixin):
     def serialize(self):
         return {
             'id': self.id,
-            'email': self.email
+            'email': self.email,
+            'name': "{} {} {}".format(self.first_name, self.middle_name, self.last_name)
         }
 
 

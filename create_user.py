@@ -26,18 +26,18 @@ with app.app_context():
                                state='CA', zip='92704', coord='01010000005F240074C2795DC065551A6E6DD94040')
 
     user_vals = [dict(email = 'admin@emve.la', password = password, phone = phone, first_name = first_name, middle_name = middle_name, last_name = last_name),
-                 dict(email = 'client@gmail.com', password=password, phone=phone, first_name='Sam', middle_name='L', last_name='Jackson', addresses=[home_address, office_address]),
-                 dict(email = 'transp@gmail.com', password=password, phone=phone, first_name='John', middle_name='H', last_name='Travolta')
+                 dict(email = 'transp@gmail.com', password=password, phone=phone, first_name='Sam', middle_name='L', last_name='Jackson'),
+                 dict(email = 'client@gmail.com', password=password, phone=phone, first_name='John', middle_name='H', last_name='Travolta', addresses=[home_address, office_address])
     ]
     user_datastore.create_user(**user_vals[0])
-    client = user_datastore.create_user(**user_vals[1])
-    user_datastore.create_user(**user_vals[2])
+    user_datastore.create_user(**user_vals[1])
+    client = user_datastore.create_user(**user_vals[2])
 
     status = DeliveryStatus.query.filter_by(name='new').one()
     delivery = Delivery(status_id=status.id,
                         order='Caramel Machiato, Cheese Bacon and Egg Burger, Croassaint, Cheese Danish',
                         special_instructions='Warm please', pickup_address='Closest Starbucks',
-                        delivery_address=home_address.__unicode__(), user_id=client.id, phone=client.phone, coord=home_address.coord)
+                        delivery_address=home_address.__unicode__(), user_id=client.id, phone=client.phone, coord=home_address.coord, pin=4513)
 
     db.session.add(delivery)
 
