@@ -1,7 +1,7 @@
 from app import app, db, user_datastore
 from flask_security.utils import encrypt_password
 
-from app.models.delivery import Delivery, DeliveryStatus
+from app.models.order import Order, OrderStatus
 from app.models.user_address import UserAddress
 
 with app.app_context():
@@ -16,7 +16,7 @@ with app.app_context():
 
     statuses = ['new', 'accepted', 'completed', 'failed']
     for status in statuses:
-        obj = DeliveryStatus()
+        obj = OrderStatus()
         obj.name = status
         db.session.add(obj)
 
@@ -33,12 +33,12 @@ with app.app_context():
     user_datastore.create_user(**user_vals[1])
     client = user_datastore.create_user(**user_vals[2])
 
-    status = DeliveryStatus.query.filter_by(name='new').one()
-    delivery = Delivery(status_id=status.id,
+    status = OrderStatus.query.filter_by(name='new').one()
+    order = Order(status_id=status.id,
                         order='Caramel Machiato, Cheese Bacon and Egg Burger, Croassaint, Cheese Danish',
                         special_instructions='Warm please', pickup_address='Closest Starbucks',
-                        delivery_address=home_address.__unicode__(), user_id=client.id, phone=client.phone, coord=home_address.coord, pin=4513)
+                        order_address=home_address.__unicode__(), user_id=client.id, phone=client.phone, coord=home_address.coord, pin=4513)
 
-    db.session.add(delivery)
+    db.session.add(order)
 
     db.session.commit()

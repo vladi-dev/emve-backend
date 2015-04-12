@@ -5,24 +5,24 @@ from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
 from app import db
-from app.models.delivery import Delivery, DeliveryStatus
+from app.models.order import Order, OrderStatus
 from app.models.user_address import UserAddress
 
 
-class DeliveryAPI(MethodView):
+class OrderAPI(MethodView):
 
     @jwt_required()
     def get(self, id=None):
-        status = DeliveryStatus.getNew()
+        status = OrderStatus.getNew()
         if id is not None:
             try:
-                delivery = Delivery.query.filter_by(id=id, status_id=status.id).one()
-                return jsonify(delivery=delivery.serialize)
+                order = Order.query.filter_by(id=id, status_id=status.id).one()
+                return jsonify(order=order.serialize)
             except Exception as e:
-                return jsonify({'errors': {'_': 'Invalid delivery id'}}), 400
+                return jsonify({'errors': {'_': 'Invalid order id'}}), 400
 
-        deliveries = Delivery.query.filter_by(status_id=status.id)
-        return jsonify(deliveries=[d.serialize for d in deliveries.all()])
+        orders = Order.query.filter_by(status_id=status.id)
+        return jsonify(orders=[o.serialize for o in orders.all()])
 
     @jwt_required()
     def put(self):
@@ -44,15 +44,15 @@ class DeliveryAPI(MethodView):
             return jsonify({'errors': {'_': 'Invalid user phone'}}), 400
 
         try:
-            status = DeliveryStatus.query.filter_by(name='new').one()
+            status = OrderStatus.query.filter_by(name='new').one()
         except Exception as e:
             return jsonify({'errors': {'_': 'Status NEW not found'}}), 400
 
         pin = randrange(1111,9999)
 
-        d = Delivery(order=order, special_instructions=special_instructions, pickup_address=pickup_address,
+        d = Order(order=order, special_instructions=special_instructions, pickup_address=pickup_address,
                      status_id=status.id,
-                     user_id=current_user.id, delivery_address=user_address.__unicode__(), coord=user_address.coord,
+                     user_id=current_user.id, order_address=user_address.__unicode__(), coord=user_address.coord,
                      phone=current_user.phone, pin=pin)
         db.session.add(d)
         db.session.commit()
@@ -61,7 +61,7 @@ class DeliveryAPI(MethodView):
 
     @classmethod
     def register(cls, mod):
-        url = '/delivery'
-        symfunc = cls.as_view('delivery_api')
+        url = '/order'
+        symfunc = cls.as_view('order_api')
         mod.add_url_rule(url, view_func=symfunc, methods=['PUT', 'GET'])
         mod.add_url_rule(url + "/<int:id>", view_func=symfunc, methods=['GET'])

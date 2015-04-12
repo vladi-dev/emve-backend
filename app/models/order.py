@@ -3,18 +3,18 @@ from geoalchemy2 import Geometry, functions as geofunc
 from app import db
 
 
-class Delivery(db.Model):
+class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('deliveries'))
-    status_id = db.Column(db.Integer, db.ForeignKey('delivery_status.id'))
-    statuses = db.relationship('DeliveryStatus', backref=db.backref('deliveries'))
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('orders'))
+    status_id = db.Column(db.Integer, db.ForeignKey('order_status.id'))
+    statuses = db.relationship('OrderStatus', backref=db.backref('orders'))
     transporter_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    transporter = db.relationship('User', foreign_keys=[transporter_id], backref=db.backref('accepted_deliveries'))
+    transporter = db.relationship('User', foreign_keys=[transporter_id], backref=db.backref('accepted_orders'))
     order = db.Column(db.Text())
     special_instructions = db.Column(db.Text())
     pickup_address = db.Column(db.Text())
-    delivery_address = db.Column(db.Text())
+    order_address = db.Column(db.Text())
     phone = db.Column(db.Text())
     pin = db.Column(db.SmallInteger())
     coord = db.Column(Geometry("POINT"))
@@ -30,7 +30,7 @@ class Delivery(db.Model):
             'order': self.order,
             'special_instructions': self.special_instructions,
             'pickup_address': self.pickup_address,
-            'delivery_address': self.delivery_address,
+            'order_address': self.order_address,
             'phone': self.phone,
             'pin': self.pin, # todo remove for transp
             'lat': lat,
@@ -39,18 +39,18 @@ class Delivery(db.Model):
         }
 
     def activate(self, transporter):
-        status = DeliveryStatus.query.filter_by(name='accepted').one()
+        status = OrderStatus.query.filter_by(name='accepted').one()
 
         if self.status_id == status.id or self.transporter_id is not None:
-            raise Exception('Delivery already accepted')
+            raise Exception('Order already accepted')
 
         if self.user_id == transporter.id:
-            raise Exception('You cannot accept delivery that you\'ve ordered')
+            raise Exception('You cannot accept order that you\'ve ordered')
 
         active_count = self.query.filter_by(transporter_id=transporter.id, status_id=status.id).count()
 
         if active_count:
-            raise Exception('You already have accepted another delivery')
+            raise Exception('You already have accepted another order')
 
         self.status_id = status.id
         self.transporter_id = transporter.id
@@ -58,9 +58,12 @@ class Delivery(db.Model):
         db.session.commit()
 
 
-class DeliveryStatus(db.Model):
+class OrderStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text())
+
+    def __unicode__(self):
+        return self.name
 
     @classmethod
     def getNew(cls):

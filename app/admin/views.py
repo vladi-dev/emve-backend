@@ -3,7 +3,7 @@ from flask_admin.contrib.geoa import ModelView as GeoModelView
 from flask_security import current_user
 from app.models.user import User
 from app.models.user_address import UserAddress
-from app.models.delivery import Delivery
+from app.models.order import Order
 
 
 
@@ -25,9 +25,9 @@ class UserAddressModelView(SecureGeoModelView):
     def __init__(self, session, **kwargs):
         super(UserAddressModelView, self).__init__(UserAddress, session, url='user_address', **kwargs)
 
-class DeliveryModelView(SecureModelView):
+class OrderModelView(SecureModelView):
     can_create = False
     column_display_pk = True
 
     def __init__(self, session, **kwargs):
-        super(DeliveryModelView, self).__init__(Delivery, session, url='delivery', **kwargs)
+        super(OrderModelView, self).__init__(Order, session, url='order', **kwargs)

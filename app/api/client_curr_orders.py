@@ -3,7 +3,7 @@ from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.models.delivery import Delivery, DeliveryStatus
+from app.models.order import Order, OrderStatus
 
 
 class ClientCurrOrdersAPI(MethodView):
@@ -12,10 +12,10 @@ class ClientCurrOrdersAPI(MethodView):
     def get(self, id=None):
         try:
             if id is not None:
-                order = Delivery.query.filter_by(id=id).one()
+                order = Order.query.filter_by(id=id).one()
                 return jsonify(order=order.serialize)
 
-            orders = Delivery.query.filter_by(user_id=current_user.id).all()
+            orders = Order.query.filter_by(user_id=current_user.id).all()
             return jsonify(orders=[o.serialize for o in orders])
         except Exception as e:
             return jsonify({'errors': {'_': e.__unicode__()}}), 400
