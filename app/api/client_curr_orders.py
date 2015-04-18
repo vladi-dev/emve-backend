@@ -1,9 +1,8 @@
 from flask import jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
-from sqlalchemy.orm.exc import NoResultFound
 
-from app.models.order import Order, OrderStatus
+from app.models.order import Order
 
 
 class ClientCurrOrdersAPI(MethodView):

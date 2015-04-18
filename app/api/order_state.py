@@ -12,7 +12,7 @@ class OrderStateAPI(MethodView):
     def post(self, id, action):
         try:
             order = Order.query.filter_by(id=id).one()
-            order.activate(current_user)
+            order.accept(current_user)
             return jsonify(order=order.serialize)
         except NoResultFound as e:
             return jsonify({'errors': {'_': 'Invalid order id'}}), 400

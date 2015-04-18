@@ -1,3 +1,8 @@
+import redis
+import gevent
+import traceback
+from time import sleep
+
 from flask import Flask, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore
@@ -5,11 +10,100 @@ from flask_security.utils import verify_password
 from flask_admin import Admin
 from flask_cors import CORS
 from flask_jwt import JWT
+from flask_uwsgi_websocket import GeventWebSocket
 
 
 # Create app
 app = Flask(__name__)
+ws = GeventWebSocket(app)
 app.config.from_object('config')
+
+REDIS_URL = 'redis://localhost:6379'
+REDIS_CHAN = 'track'
+
+red = redis.StrictRedis
+redis = red.from_url(REDIS_URL)
+
+class TrackBackend(object):
+    """Interface for registering and updating WebSocket clients."""
+
+    def __iter_data(self):
+        for message in self.pubsub.listen():
+            data = message.get('data')
+            if message['type'] == 'message':
+                # app.logger.info(u'Sending message: {}'.format(data))
+                yield data
+
+    def register(self, client):
+        # app.logger.info(u'Registered...')
+        """Register a WebSocket connection for Redis updates."""
+        self.clients.append(client)
+
+    def send(self, client, data):
+        """Send given data to the registered client.
+        Automatically discards invalid connections."""
+        try:
+            # app.logger.info(u'Sending: ' + data)
+            client.send(data)
+        except Exception as e:
+            app.logger.info(u'Client removed')
+            self.clients.remove(client)
+
+    def run(self):
+        """Listens for new messages in Redis, and sends them to clients."""
+        app.logger.info(u'Run...')
+        self.clients = list()
+        self.pubsub = redis.pubsub()
+        self.pubsub.subscribe(REDIS_CHAN)
+        for data in self.__iter_data():
+            app.logger.info(u'iter...: ' + data)
+            for client in self.clients:
+                # app.logger.info(u'Spawned...')
+                gevent.spawn(self.send, client, data)
+
+
+    def start(self):
+        """Maintains Redis subscription in the background."""
+        gevent.spawn(self.run)
+
+track = TrackBackend()
+track.start()
+
+@ws.route('/send')
+def send(ws):
+    """Receives incoming messages, inserts them into Redis."""
+    while True:
+        # Sleep to prevent *contstant* context-switches.
+        gevent.sleep(0.1)
+        message = ws.receive()
+
+        if message is not None:
+            app.logger.info(u'Inserting message: {}'.format(message))
+            if message:
+                redis.publish(REDIS_CHAN, message)
+        else:
+            print 'break'
+            break
+
+@ws.route('/resp')
+def resp(ws):
+    """Sends outgoing messages, via `TrackBackend`."""
+    # app.logger.info(u'Resp')
+    track.register(ws)
+
+    while True:
+        # app.logger.info(u'Resp loop')
+        # Context switch while `TrackBackend.start` is running in the background.
+        gevent.sleep()
+
+        message = ws.receive()
+
+        if message is None:
+            break
+        # app.logger.info(u'Resp loop2')
+
+    print "Disconnect"
+
 
 # JWT Token Auth
 jwt = JWT(app)
