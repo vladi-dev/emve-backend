@@ -1,15 +1,14 @@
+import json
 import redis
 import gevent
-import traceback
-from time import sleep
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_security.utils import verify_password
 from flask_admin import Admin
 from flask_cors import CORS
-from flask_jwt import JWT
+from flask_jwt import JWT, current_user, jwt_required, verify_jwt
 from flask_uwsgi_websocket import GeventWebSocket
 
 
@@ -43,7 +42,7 @@ class TrackBackend(object):
         """Send given data to the registered client.
         Automatically discards invalid connections."""
         try:
-            # app.logger.info(u'Sending: ' + data)
+            app.logger.info(u'Sending: ' + data)
             client.send(data)
         except Exception as e:
             app.logger.info(u'Client removed')
@@ -51,16 +50,15 @@ class TrackBackend(object):
 
     def run(self):
         """Listens for new messages in Redis, and sends them to clients."""
-        app.logger.info(u'Run...')
         self.clients = list()
         self.pubsub = redis.pubsub()
         self.pubsub.subscribe(REDIS_CHAN)
         for data in self.__iter_data():
-            app.logger.info(u'iter...: ' + data)
-            for client in self.clients:
-                # app.logger.info(u'Spawned...')
-                gevent.spawn(self.send, client, data)
-
+            for client, id in self.clients:
+                if data:
+                    msg = json.loads(data)
+                    if id == msg['user_id']:
+                        gevent.spawn(self.send, client, json.dumps(msg))
 
     def start(self):
         """Maintains Redis subscription in the background."""
@@ -69,40 +67,36 @@ class TrackBackend(object):
 track = TrackBackend()
 track.start()
 
-@ws.route('/send')
-def send(ws):
+@ws.route('/websocket')
+def websocket(ws):
     """Receives incoming messages, inserts them into Redis."""
-    while True:
-        # Sleep to prevent *contstant* context-switches.
-        gevent.sleep(0.1)
-        message = ws.receive()
+    with app.request_context(ws.environ):
+        try:
+            token = 'Bearer ' + request.args.get('token')
+            verify_jwt(None, token)
+            track.register((ws, current_user.id))
+            while True:
+                # Sleep to prevent *contstant* context-switches.
+                gevent.sleep(0.1)
+                message = ws.receive()
 
-        if message is not None:
-            app.logger.info(u'Inserting message: {}'.format(message))
-            if message:
-                redis.publish(REDIS_CHAN, message)
-        else:
-            print 'break'
-            break
-
-@ws.route('/resp')
-def resp(ws):
-    """Sends outgoing messages, via `TrackBackend`."""
-    # app.logger.info(u'Resp')
-    track.register(ws)
-
-    while True:
-        # app.logger.info(u'Resp loop')
-        # Context switch while `TrackBackend.start` is running in the background.
-        gevent.sleep()
-
-        message = ws.receive()
-
-        if message is None:
-            break
-        # app.logger.info(u'Resp loop2')
-
-    print "Disconnect"
+                if message is not None:
+                    if message == '':
+                        continue
+                    message = json.loads(message)
+                    order = Order.query.filter_by(transporter_id=current_user.id).one()
+                    message['order_id'] = order.id
+                    message['user_id'] = order.user_id
+                    message = json.dumps(message)
+                    app.logger.info(u'Inserting message: {}'.format(message))
+                    if message:
+                        redis.publish(REDIS_CHAN, message)
+                else:
+                    print 'break'
+                    break
+        except Exception as e:
+            print 'exception' + e.__unicode__()
+            return jsonify({'errors': e.__unicode__()}), 400
 
 
 # JWT Token Auth

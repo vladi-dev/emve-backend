@@ -1,8 +1,11 @@
+import json
+
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 from sqlalchemy.orm.exc import NoResultFound
 
+from app import redis, REDIS_CHAN
 from app.models.order import Order, calculate_fees
 
 
@@ -38,7 +41,9 @@ class TranspCurrOrderAPI(MethodView):
             if amount and pin:
                 try:
                     # TODO check transporter id
-                    order.complete(int(pin), float(amount))
+                    # TODO remove comment
+                    # order.complete(int(pin), float(amount))
+                    redis.publish(REDIS_CHAN, json.dumps({'event': 'order_completed', 'user_id': order.user_id}))
                     return jsonify({'success': 1})
                 except Exception as e:
                     return jsonify({'errors': {'_': e.__unicode__()}}), 400
