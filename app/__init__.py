@@ -72,7 +72,7 @@ def websocket(ws):
     """Receives incoming messages, inserts them into Redis."""
     with app.request_context(ws.environ):
         try:
-            token = 'Bearer ' + request.args.get('token')
+            token = 'JWT ' + request.args.get('token')
             verify_jwt(None, token)
             track.register((ws, current_user.id))
             while True:
