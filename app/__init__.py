@@ -84,13 +84,21 @@ def websocket(ws):
                     if message == '':
                         continue
                     message = json.loads(message)
-                    order = Order.query.filter_by(transporter_id=current_user.id).one()
-                    message['order_id'] = order.id
-                    message['user_id'] = order.user_id
-                    message = json.dumps(message)
-                    app.logger.info(u'Inserting message: {}'.format(message))
+
+                    if message['event'] == 'track':
+                        status =  OrderStatus.getAccepted()
+
+                        try:
+                            order = Order.query.filter_by(transporter_id=current_user.id, status_id=status.id).one()
+                        except Exception as e:
+                            continue
+
+                        message['order_id'] = order.id
+                        message['user_id'] = order.user_id
+
                     if message:
-                        redis.publish(REDIS_CHAN, message)
+                        redis.publish(REDIS_CHAN, json.dumps(message))
+                        app.logger.info(u'{}: {}'.format(message['event'], json.dumps(message)))
                 else:
                     print 'break'
                     break
@@ -124,7 +132,7 @@ db = SQLAlchemy(app)
 # Import models
 from app.models.user import User, Role
 from app.models.user_address import UserAddress
-from app.models.order import Order
+from app.models.order import Order, OrderStatus
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)

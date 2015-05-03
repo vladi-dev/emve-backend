@@ -106,5 +106,9 @@ class OrderStatus(db.Model):
         return cls.query.filter_by(name='new').one()
 
     @classmethod
+    def getAccepted(cls):
+        return cls.query.filter_by(name='accepted').one()
+
+    @classmethod
     def getCompleted(cls):
         return cls.query.filter_by(name='completed').one()

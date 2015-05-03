@@ -6,7 +6,7 @@ from flask_jwt import jwt_required, current_user
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import redis, REDIS_CHAN
-from app.models.order import Order, calculate_fees
+from app.models.order import Order, OrderStatus, calculate_fees
 
 
 class TranspCurrOrderAPI(MethodView):
@@ -14,7 +14,8 @@ class TranspCurrOrderAPI(MethodView):
     @jwt_required()
     def get(self):
         try:
-            order = Order.query.filter_by(transporter_id=current_user.id).one()
+            status = OrderStatus.getAccepted()
+            order = Order.query.filter_by(transporter_id=current_user.id, status_id=status.id).one()
 
             amount = request.args.get('amount')
             if amount is not None:
@@ -31,7 +32,8 @@ class TranspCurrOrderAPI(MethodView):
     @jwt_required()
     def post(self, id=None):
         try:
-            order = Order.query.filter_by(transporter_id=current_user.id).one()
+            status = OrderStatus.getAccepted()
+            order = Order.query.filter_by(transporter_id=current_user.id, status_id=status.id).one()
 
             data = request.get_json(force=True)
 
@@ -42,7 +44,7 @@ class TranspCurrOrderAPI(MethodView):
                 try:
                     # TODO check transporter id
                     # TODO remove comment
-                    # order.complete(int(pin), float(amount))
+                    order.complete(int(pin), float(amount))
                     redis.publish(REDIS_CHAN, json.dumps({'event': 'order_completed', 'user_id': order.user_id}))
                     return jsonify({'success': 1})
                 except Exception as e:

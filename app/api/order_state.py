@@ -16,7 +16,7 @@ class OrderStateAPI(MethodView):
         try:
             order = Order.query.filter_by(id=id).one()
             order.accept(current_user)
-            redis.publish(REDIS_CHAN, json.dumps({'event': 'order_accepted', 'user_id': order.user_id}))
+            redis.publish(REDIS_CHAN, json.dumps({'event': 'order_accepted', 'order_id': order.id, 'user_id': order.user_id}))
             return jsonify(order=order.serialize)
         except NoResultFound as e:
             return jsonify({'errors': {'_': 'Invalid order id'}}), 400
