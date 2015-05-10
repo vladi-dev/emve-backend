@@ -1,28 +1,44 @@
+import json
 from random import randrange
+
+from sqlalchemy import or_
 
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
-from app import db
+from app import db, redis, REDIS_CHAN
 from app.models.order import Order, OrderStatus
 from app.models.user_address import UserAddress
 
 
-class OrderAPI(MethodView):
+class ClientOrdersAPI(MethodView):
 
     @jwt_required()
     def get(self, id=None):
-        status = OrderStatus.getNew()
+        q = Order.query.filter_by(user_id=current_user.id)
+
         if id is not None:
             try:
-                order = Order.query.filter_by(id=id, status_id=status.id).one()
+                order = q.filter_by(id=id).one()
                 return jsonify(order=order.serialize)
             except Exception as e:
-                return jsonify({'errors': {'_': 'Invalid order id'}}), 400
+                return jsonify({'error': 'Invalid order id'}), 400
 
-        orders = Order.query.filter_by(status_id=status.id)
-        return jsonify(orders=[o.serialize for o in orders.all()])
+        view = request.args.get('view')
+
+        if view == 'current':
+            status_new = OrderStatus.getNew()
+            status_accepted = OrderStatus.getAccepted()
+            q = q.filter(or_(Order.status_id == status_new.id, Order.status_id == status_accepted.id))
+        elif view == 'archive':
+            status_completed = OrderStatus.getCompleted()
+            status_cancelled = OrderStatus.getCancelled()
+            q = q.filter(or_(Order.status_id == status_completed.id, Order.status_id == status_cancelled.id))
+        else:
+            return jsonify({'errors': 'Invalid request'}), 400
+
+        return jsonify(orders=[o.serialize for o in q.all()])
 
     @jwt_required()
     def put(self):
@@ -33,35 +49,37 @@ class OrderAPI(MethodView):
         user_address_id = data.get('user_address_id', None)
 
         if not all((order, special_instructions, pickup_address, user_address_id)):
-            return jsonify({'errors': {'_': 'Fill in all fields'}}), 400
+            return jsonify({'error': 'Fill in all fields'}), 400
 
         try:
             user_address = UserAddress.query.filter_by(id=user_address_id, user_id=current_user.id).one()
         except Exception as e:
-            return jsonify({'errors': {'_': 'Invalid user address id'}}), 400
+            return jsonify({'error': 'Invalid user address id'}), 400
 
         if not current_user.phone:
-            return jsonify({'errors': {'_': 'Invalid user phone'}}), 400
+            return jsonify({'error': 'Invalid user phone'}), 400
 
         try:
             status = OrderStatus.query.filter_by(name='new').one()
         except Exception as e:
-            return jsonify({'errors': {'_': 'Status NEW not found'}}), 400
+            return jsonify({'error': 'Status NEW not found'}), 400
 
         pin = randrange(1111,9999)
 
-        d = Order(order=order, special_instructions=special_instructions, pickup_address=pickup_address,
+        order = Order(order=order, special_instructions=special_instructions, pickup_address=pickup_address,
                      status_id=status.id,
                      user_id=current_user.id, order_address=user_address.__unicode__(), coord=user_address.coord,
                      phone=current_user.phone, pin=pin)
-        db.session.add(d)
+        db.session.add(order)
         db.session.commit()
 
-        return jsonify({'success': 1})
+        redis.publish(REDIS_CHAN, json.dumps({'event': 'new_order', 'order': order.serialize}))
+
+        return jsonify({'order': order.serialize})
 
     @classmethod
     def register(cls, mod):
-        url = '/order'
-        symfunc = cls.as_view('order_api')
+        url = '/client/orders'
+        symfunc = cls.as_view('client_orders_api')
         mod.add_url_rule(url, view_func=symfunc, methods=['PUT', 'GET'])
         mod.add_url_rule(url + "/<int:id>", view_func=symfunc, methods=['GET'])

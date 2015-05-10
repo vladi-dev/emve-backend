@@ -42,7 +42,7 @@ class TrackBackend(object):
         """Send given data to the registered client.
         Automatically discards invalid connections."""
         try:
-            app.logger.info(u'Sending: ' + data)
+            # app.logger.info(u'Sending: ' + data)
             client.send(data)
         except Exception as e:
             app.logger.info(u'Client removed')
@@ -57,7 +57,7 @@ class TrackBackend(object):
             for client, id in self.clients:
                 if data:
                     msg = json.loads(data)
-                    if id == msg['user_id']:
+                    if not 'user_id' in msg or id == msg['user_id']:
                         gevent.spawn(self.send, client, json.dumps(msg))
 
     def start(self):

@@ -52,7 +52,14 @@ class Order(db.Model):
             'pin': self.pin, # todo remove for transp
             'lat': lat,
             'lng': lng,
-            'transporter': self.transporter.serialize if self.transporter_id else None
+            'status': self.statuses.serialize,
+            'transporter': self.transporter.serialize if self.transporter_id else None,
+            'amount': str(self.amount),
+            'total_fee': str(self.total_fee),
+            'total_amount': str(self.total_amount),
+            'transp_fee': str(self.transp_fee),
+            'service_fee': str(self.service_fee),
+            'completed_at': str(self.completed_at)
         }
 
     def accept(self, transporter):
@@ -112,3 +119,13 @@ class OrderStatus(db.Model):
     @classmethod
     def getCompleted(cls):
         return cls.query.filter_by(name='completed').one()
+
+    @classmethod
+    def getCancelled(cls):
+        return cls.query.filter_by(name='cancelled').one()
+
+    @property
+    def serialize(self):
+        return {
+            'name': self.name
+        }
