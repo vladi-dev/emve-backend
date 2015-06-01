@@ -73,7 +73,7 @@ class ClientOrdersAPI(MethodView):
         db.session.add(order)
         db.session.commit()
 
-        redis.publish(REDIS_CHAN, json.dumps({'event': 'new_order', 'order': order.serialize}))
+        redis.publish(REDIS_CHAN, json.dumps({'event': 'raven:new_order', 'order': order.serialize}))
 
         return jsonify({'order': order.serialize})
 

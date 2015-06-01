@@ -62,8 +62,8 @@ class TranspOrdersAPI(MethodView):
                 status_new = OrderStatus.getNew()
                 order = Order.query.filter_by(id=id, status_id=status_new.id).one()
                 order.accept(current_user)
-                redis.publish(REDIS_CHAN, json.dumps({'event': 'client_order_accepted', 'order': order.serialize, 'user_id': order.user_id}))
-                redis.publish(REDIS_CHAN, json.dumps({'event': 'remove_order', 'order_id': order.id}))
+                redis.publish(REDIS_CHAN, json.dumps({'event': 'client:order_accepted', 'order': order.serialize, 'user_id': order.user_id}))
+                redis.publish(REDIS_CHAN, json.dumps({'event': 'raven:order_remove', 'order_id': order.id}))
                 return jsonify(order=order.serialize)
             elif act == 'complete':
                 status = OrderStatus.getAccepted()
@@ -77,7 +77,7 @@ class TranspOrdersAPI(MethodView):
                 if amount and pin:
                     try:
                         order.complete(int(pin), float(amount))
-                        redis.publish(REDIS_CHAN, json.dumps({'event': 'client_order_completed', 'order': order.serialize, 'user_id': order.user_id}))
+                        redis.publish(REDIS_CHAN, json.dumps({'event': 'client:order_completed', 'order': order.serialize, 'user_id': order.user_id}))
                         return jsonify({'success': 1})
                     except Exception as e:
                         return jsonify({'errors': {'_': e.__unicode__()}}), 400

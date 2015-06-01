@@ -85,7 +85,7 @@ def websocket(ws):
                         continue
                     message = json.loads(message)
 
-                    if message['event'] == 'track':
+                    if message['event'] == 'raven:coords_sent':
                         status =  OrderStatus.getAccepted()
 
                         try:
@@ -95,13 +95,13 @@ def websocket(ws):
 
                         message['order_id'] = order.id
                         message['user_id'] = order.user_id
-
-                    if message:
+                        message['event'] = 'client:track_order_{}'.format(order.id)
                         redis.publish(REDIS_CHAN, json.dumps(message))
                         app.logger.info(u'{}: {}'.format(message['event'], json.dumps(message)))
                 else:
                     print 'break'
                     break
+
         except Exception as e:
             print 'exception' + e.__unicode__()
             return jsonify({'errors': e.__unicode__()}), 400
