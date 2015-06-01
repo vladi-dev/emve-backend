@@ -10,7 +10,7 @@ from app import redis, REDIS_CHAN
 from app.models.order import Order, OrderStatus, calculate_fees
 
 
-class TranspOrdersAPI(MethodView):
+class RavenOrdersAPI(MethodView):
 
     @jwt_required()
     def get(self, id=None):
@@ -19,7 +19,7 @@ class TranspOrdersAPI(MethodView):
         if id is not None:
             try:
                 order = q.filter_by(id=id).one()
-                if order.transporter_id != current_user.id:
+                if order.raven_id != current_user.id:
                     status = OrderStatus.getNew()
                     if order.status_id != status.id:
                         return jsonify({'error': 'You cannot view that order'}), 400
@@ -42,12 +42,12 @@ class TranspOrdersAPI(MethodView):
             q = q.filter(Order.status_id == status_new.id)
         elif view == 'accepted':
             status_accepted = OrderStatus.getAccepted()
-            q = q.filter(Order.status_id == status_accepted.id).filter(Order.transporter_id == current_user.id)
+            q = q.filter(Order.status_id == status_accepted.id).filter(Order.raven_id == current_user.id)
         elif view == 'archive':
             status_completed = OrderStatus.getCompleted()
             status_cancelled = OrderStatus.getCancelled()
             q = q.filter(or_(Order.status_id == status_completed.id, Order.status_id == status_cancelled.id)).filter(
-                Order.transporter_id == current_user.id)
+                Order.raven_id == current_user.id)
         else:
             return jsonify({'errors': 'Invalid request'}), 400
 
@@ -67,7 +67,7 @@ class TranspOrdersAPI(MethodView):
                 return jsonify(order=order.serialize)
             elif act == 'complete':
                 status = OrderStatus.getAccepted()
-                order = Order.query.filter_by(id=id, transporter_id=current_user.id, status_id=status.id).one()
+                order = Order.query.filter_by(id=id, raven_id=current_user.id, status_id=status.id).one()
 
                 data = request.get_json(force=True)
 
@@ -88,7 +88,7 @@ class TranspOrdersAPI(MethodView):
 
     @classmethod
     def register(cls, mod):
-        url = '/transp/orders'
-        symfunc = cls.as_view('transp_orders_api')
+        url = '/raven/orders'
+        symfunc = cls.as_view('raven_orders_api')
         mod.add_url_rule(url, view_func=symfunc, methods=['GET'])
         mod.add_url_rule(url + "/<int:id>", view_func=symfunc, methods=['GET', 'POST'])

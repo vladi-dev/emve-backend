@@ -25,9 +25,9 @@ with app.app_context():
     office_address = UserAddress(label='Office', house='2500', street='w macarthur blvd', unit='124', city='Santa Ana',
                                state='CA', zip='92704', coord='01010000005F240074C2795DC065551A6E6DD94040')
 
-    user_vals = [dict(email = 'admin@emve.la', password = password, phone = phone, first_name = first_name, middle_name = middle_name, last_name = last_name, is_transp=False),
-                 dict(email = 'transp@gmail.com', password=password, phone=phone, first_name='Sam', middle_name='L', last_name='Jackson', is_transp=True),
-                 dict(email = 'client@gmail.com', password=password, phone=phone, first_name='John', middle_name='H', last_name='Travolta', is_transp=False, addresses=[home_address, office_address])
+    user_vals = [dict(email = 'admin@emve.la', password = password, phone = phone, first_name = first_name, middle_name = middle_name, last_name = last_name, is_raven=False),
+                 dict(email = 'raven@gmail.com', password=password, phone=phone, first_name='Sam', middle_name='L', last_name='Jackson', is_raven=True),
+                 dict(email = 'client@gmail.com', password=password, phone=phone, first_name='John', middle_name='H', last_name='Travolta', is_raven=False, addresses=[home_address, office_address])
     ]
     user_datastore.create_user(**user_vals[0])
     user_datastore.create_user(**user_vals[1])

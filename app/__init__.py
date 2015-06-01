@@ -89,7 +89,7 @@ def websocket(ws):
                         status =  OrderStatus.getAccepted()
 
                         try:
-                            order = Order.query.filter_by(transporter_id=current_user.id, status_id=status.id).one()
+                            order = Order.query.filter_by(raven_id=current_user.id, status_id=status.id).one()
                         except Exception as e:
                             continue
 
