@@ -7,9 +7,9 @@ def calculate_fees(amount):
     amount = float(amount)
     total_fee = amount * 0.20
     total_amount = amount + total_fee
-    raven_fee = total_fee * 0.75
+    maven_fee = total_fee * 0.75
     service_fee = total_fee * 0.25
-    return {'amount': amount, 'total_fee': total_fee, 'total_amount': total_amount, 'raven_fee': raven_fee, 'service_fee': service_fee}
+    return {'amount': amount, 'total_fee': total_fee, 'total_amount': total_amount, 'maven_fee': maven_fee, 'service_fee': service_fee}
 
 class Order(db.Model):
     __tablename__ = 'orders'
@@ -18,8 +18,8 @@ class Order(db.Model):
     user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('orders'))
     status_id = db.Column(db.Integer, db.ForeignKey('order_statuses.id'))
     statuses = db.relationship('OrderStatus', backref=db.backref('orders'))
-    raven_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    raven = db.relationship('User', foreign_keys=[raven_id], backref=db.backref('accepted_orders'))
+    maven_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    maven = db.relationship('User', foreign_keys=[maven_id], backref=db.backref('accepted_orders'))
     order = db.Column(db.Text())
     special_instructions = db.Column(db.Text())
     pickup_address = db.Column(db.Text())
@@ -29,7 +29,7 @@ class Order(db.Model):
     amount = db.Column(db.Numeric(12, 2))
     total_fee = db.Column(db.Numeric(12, 2))
     total_amount = db.Column(db.Numeric(12, 2))
-    raven_fee = db.Column(db.Numeric(12, 2))
+    maven_fee = db.Column(db.Numeric(12, 2))
     service_fee = db.Column(db.Numeric(12, 2))
     created_at = db.Column(db.DateTime(), default=datetime.now)
     accepted_at = db.Column(db.DateTime())
@@ -49,35 +49,35 @@ class Order(db.Model):
             'pickup_address': self.pickup_address,
             'order_address': self.order_address,
             'phone': self.phone,
-            'pin': self.pin, # todo remove for raven
+            'pin': self.pin, # todo remove for maven
             'lat': lat,
             'lng': lng,
             'status': self.statuses.serialize,
-            'raven': self.raven.serialize if self.raven_id else None,
+            'maven': self.maven.serialize if self.maven_id else None,
             'amount': str(self.amount),
             'total_fee': str(self.total_fee),
             'total_amount': str(self.total_amount),
-            'raven_fee': str(self.raven_fee),
+            'maven_fee': str(self.maven_fee),
             'service_fee': str(self.service_fee),
             'completed_at': str(self.completed_at)
         }
 
-    def accept(self, raven):
+    def accept(self, maven):
         status = OrderStatus.query.filter_by(name='accepted').one()
 
-        if self.status_id == status.id or self.raven_id is not None:
+        if self.status_id == status.id or self.maven_id is not None:
             raise Exception('Order already accepted')
 
-        if self.user_id == raven.id:
+        if self.user_id == maven.id:
             raise Exception('You cannot accept order that you\'ve ordered')
 
-        active_count = self.query.filter_by(raven_id=raven.id, status_id=status.id).count()
+        active_count = self.query.filter_by(maven_id=maven.id, status_id=status.id).count()
 
         if active_count:
             raise Exception('You already have accepted another order')
 
         self.status_id = status.id
-        self.raven_id = raven.id
+        self.maven_id = maven.id
         self.accepted_at = datetime.now()
         db.session.add(self)
         db.session.commit()
@@ -90,7 +90,7 @@ class Order(db.Model):
             self.amount = fees['amount']
             self.total_fee = fees['total_fee']
             self.total_amount = fees['total_amount']
-            self.raven_fee = fees['raven_fee']
+            self.maven_fee = fees['maven_fee']
             self.service_fee = fees['service_fee']
             self.completed_at = datetime.now()
             db.session.add(self)

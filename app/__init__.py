@@ -85,11 +85,11 @@ def websocket(ws):
                         continue
                     message = json.loads(message)
 
-                    if message['event'] == 'raven:coords_sent':
+                    if message['event'] == 'maven:coords_sent':
                         status =  OrderStatus.getAccepted()
 
                         try:
-                            order = Order.query.filter_by(raven_id=current_user.id, status_id=status.id).one()
+                            order = Order.query.filter_by(maven_id=current_user.id, status_id=status.id).one()
                         except Exception as e:
                             continue
 

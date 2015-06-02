@@ -10,7 +10,7 @@ from app import redis, REDIS_CHAN
 from app.models.order import Order, OrderStatus, calculate_fees
 
 
-class RavenOrdersAPI(MethodView):
+class MavenOrdersAPI(MethodView):
 
     @jwt_required()
     def get(self, id=None):
@@ -19,7 +19,7 @@ class RavenOrdersAPI(MethodView):
         if id is not None:
             try:
                 order = q.filter_by(id=id).one()
-                if order.raven_id != current_user.id:
+                if order.maven_id != current_user.id:
                     status = OrderStatus.getNew()
                     if order.status_id != status.id:
                         return jsonify({'error': 'You cannot view that order'}), 400
@@ -42,12 +42,12 @@ class RavenOrdersAPI(MethodView):
             q = q.filter(Order.status_id == status_new.id)
         elif view == 'accepted':
             status_accepted = OrderStatus.getAccepted()
-            q = q.filter(Order.status_id == status_accepted.id).filter(Order.raven_id == current_user.id)
+            q = q.filter(Order.status_id == status_accepted.id).filter(Order.maven_id == current_user.id)
         elif view == 'archive':
             status_completed = OrderStatus.getCompleted()
             status_cancelled = OrderStatus.getCancelled()
             q = q.filter(or_(Order.status_id == status_completed.id, Order.status_id == status_cancelled.id)).filter(
-                Order.raven_id == current_user.id)
+                Order.maven_id == current_user.id)
         else:
             return jsonify({'errors': 'Invalid request'}), 400
 
@@ -63,11 +63,11 @@ class RavenOrdersAPI(MethodView):
                 order = Order.query.filter_by(id=id, status_id=status_new.id).one()
                 order.accept(current_user)
                 redis.publish(REDIS_CHAN, json.dumps({'event': 'client:order_accepted', 'order': order.serialize, 'user_id': order.user_id}))
-                redis.publish(REDIS_CHAN, json.dumps({'event': 'raven:order_remove', 'order_id': order.id}))
+                redis.publish(REDIS_CHAN, json.dumps({'event': 'maven:order_remove', 'order_id': order.id}))
                 return jsonify(order=order.serialize)
             elif act == 'complete':
                 status = OrderStatus.getAccepted()
-                order = Order.query.filter_by(id=id, raven_id=current_user.id, status_id=status.id).one()
+                order = Order.query.filter_by(id=id, maven_id=current_user.id, status_id=status.id).one()
 
                 data = request.get_json(force=True)
 
@@ -88,7 +88,7 @@ class RavenOrdersAPI(MethodView):
 
     @classmethod
     def register(cls, mod):
-        url = '/raven/orders'
-        symfunc = cls.as_view('raven_orders_api')
+        url = '/maven/orders'
+        symfunc = cls.as_view('maven_orders_api')
         mod.add_url_rule(url, view_func=symfunc, methods=['GET'])
         mod.add_url_rule(url + "/<int:id>", view_func=symfunc, methods=['GET', 'POST'])

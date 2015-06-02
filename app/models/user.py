@@ -29,7 +29,7 @@ class User(db.Model, UserMixin):
     last_name = db.Column(db.String(255))
     middle_name = db.Column(db.String(255))
     phone = db.Column(db.String(255))
-    is_raven = db.Column(db.Boolean(), default=False)
+    is_maven = db.Column(db.Boolean(), default=False)
 
     def __unicode__(self):
         return self.email
