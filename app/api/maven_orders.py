@@ -7,7 +7,7 @@ from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
-from app import app,redis, REDIS_CHAN
+from app import redis, REDIS_CHAN
 from app.models.order import Order, OrderStatus, calculate_fees
 
 def maven_only(fn):
