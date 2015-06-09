@@ -1,18 +1,27 @@
+from functools import wraps
+
 import json
 from sqlalchemy import or_
 
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
-from sqlalchemy.orm.exc import NoResultFound
 
-from app import redis, REDIS_CHAN
+from app import app,redis, REDIS_CHAN
 from app.models.order import Order, OrderStatus, calculate_fees
 
+def maven_only(fn):
+    @wraps(fn)
+    def decorator(*args, **kwargs):
+        if not current_user.is_maven:
+            return jsonify({'error': 'Only for mavens'}), 400
+        return fn(*args, **kwargs)
+    return decorator
 
 class MavenOrdersAPI(MethodView):
 
     @jwt_required()
+    @maven_only
     def get(self, id=None):
         q = Order.query
 
@@ -54,6 +63,7 @@ class MavenOrdersAPI(MethodView):
         return jsonify(orders=[o.serialize for o in q.all()])
 
     @jwt_required()
+    @maven_only
     def post(self, id):
         try:
             act = request.args.get('act')

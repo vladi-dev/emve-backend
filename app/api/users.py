@@ -6,7 +6,7 @@ from app import db
 
 
 class UsersAPI(MethodView):
-    allowed_fields = ['first_name', 'last_name', 'middle_name', 'phone']
+    allowed_fields = ['first_name', 'last_name', 'middle_name', 'phone', 'is_maven']
 
     @jwt_required()
     def get(self):
