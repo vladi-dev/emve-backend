@@ -20,6 +20,18 @@ app.config.from_object('config')
 REDIS_URL = 'redis://localhost:6379'
 REDIS_CHAN = 'track'
 
+BRAINTREE_MERCHANT_ID = 'cj987r5m4mq8sts3'
+BRAINTREE_PUBLIC_KEY = 'mz38t42k85jrs4vv'
+BRAINTREE_PRIVATE_KEY = '1d3285b8abc3594c7aa0c46fc188f64e'
+
+import braintree
+
+braintree.Configuration.configure(braintree.Environment.Sandbox,
+                                  merchant_id=BRAINTREE_MERCHANT_ID,
+                                  public_key=BRAINTREE_PUBLIC_KEY,
+                                  private_key=BRAINTREE_PRIVATE_KEY)
+
+
 red = redis.StrictRedis
 redis = red.from_url(REDIS_URL)
 
