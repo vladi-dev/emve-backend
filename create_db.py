@@ -7,10 +7,6 @@ from app.models.user_address import UserAddress
 with app.app_context():
     email = 'admin@emve.la'
     password = encrypt_password('123123')
-    phone = '8181231234'
-    first_name = 'Michael'
-    middle_name = 'J'
-    last_name = 'Fox'
     db.drop_all()
     db.create_all()
 
@@ -25,10 +21,13 @@ with app.app_context():
     office_address = UserAddress(label='Office', house='2500', street='w macarthur blvd', unit='124', city='Santa Ana',
                                state='CA', zip='92704', coord='01010000005F240074C2795DC065551A6E6DD94040')
 
-    user_vals = [dict(email = 'admin@emve.la', password = password, phone = phone, first_name = first_name, middle_name = middle_name, last_name = last_name, is_maven=False),
-                 dict(email = 'maven@gmail.com', password=password, phone=phone, first_name='Sam', middle_name='L', last_name='Jackson', is_maven=True),
-                 dict(email = 'client@gmail.com', password=password, phone=phone, first_name='John', middle_name='H', last_name='Travolta', is_maven=False, addresses=[home_address, office_address])
-    ]
+    user_vals = [dict(email='admin@emve.la', password=password, phone='8181111234', first_name='Emve', middle_name='',
+                      last_name='Admin', is_maven=False),
+                 dict(email='maven@gmail.com', password=password, phone='8181111111', first_name='Sam', middle_name='L',
+                      last_name='Jackson', is_maven=True),
+                 dict(email='client@gmail.com', password=password, phone='8182222222', first_name='John',
+                      middle_name='H', last_name='Travolta', is_maven=False, addresses=[home_address, office_address])
+                 ]
     user_datastore.create_user(**user_vals[0])
     user_datastore.create_user(**user_vals[1])
     client = user_datastore.create_user(**user_vals[2])

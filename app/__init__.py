@@ -40,7 +40,7 @@ jwt = JWT(app)
 
 @jwt.authentication_handler
 def authenticate(username, password):
-    user = user_datastore.get_user(username)
+    user = User.query.filter((User.email == username) | (User.phone == username)).one()
     if user:
         if verify_password(password, user.password):
             return user
@@ -61,6 +61,7 @@ db = SQLAlchemy(app)
 from app.models.user import User, Role
 from app.models.user_address import UserAddress
 from app.models.order import Order, OrderStatus
+from app.models.braintree_payment import BraintreePayment
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)

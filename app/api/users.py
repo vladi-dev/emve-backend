@@ -6,15 +6,10 @@ from app import db
 
 
 class UsersAPI(MethodView):
-    allowed_fields = ['first_name', 'last_name', 'middle_name', 'phone', 'is_maven']
 
     @jwt_required()
     def get(self):
-        rv = {}
-        for field in UsersAPI.allowed_fields:
-            rv[field] = getattr(current_user, field)
-
-        return jsonify(rv)
+        return jsonify(current_user.serialize)
 
     @jwt_required()
     def patch(self):

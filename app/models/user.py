@@ -30,6 +30,9 @@ class User(db.Model, UserMixin):
     middle_name = db.Column(db.String(255))
     phone = db.Column(db.String(255))
     is_maven = db.Column(db.Boolean(), default=False)
+    braintree_payment_id = db.Column(db.Integer, db.ForeignKey('braintree_payments.id'))
+    braintree_payment = db.relationship('BraintreePayment', foreign_keys=[braintree_payment_id], backref=db.backref('users'))
+    braintree_customer_id = db.Column(db.String(255))
 
     def __unicode__(self):
         return self.email
@@ -39,7 +42,8 @@ class User(db.Model, UserMixin):
         return {
             'id': self.id,
             'email': self.email,
-            'name': "{} {} {}".format(self.first_name, self.middle_name, self.last_name)
+            'name': "{} {} {}".format(self.first_name, self.middle_name, self.last_name),
+            'braintree_payment_id': self.braintree_payment_id
         }
 
 
