@@ -45,5 +45,3 @@ class User(db.Model, UserMixin):
             'name': "{} {} {}".format(self.first_name, self.middle_name, self.last_name),
             'braintree_payment_id': self.braintree_payment_id
         }
-
-

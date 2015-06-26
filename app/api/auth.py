@@ -10,13 +10,18 @@ class AuthAPI(MethodView):
     def post(self):
         data = request.get_json(force=True)
 
+        first_name = data.get('firstName', None)
+        last_name = data.get('lastName', None)
+        phone = data.get('phone', None)
         email = data.get('email', None)
+        zip = data.get('zip', None)
         password = data.get('password', None)
-        password = encrypt_password(password)
 
-        if (email and password):
+        if all((first_name, last_name, phone, email, zip, password)):
+            password = encrypt_password(password)
             try:
-                user = user_datastore.create_user(email=email, password=password)
+                user = user_datastore.create_user(first_name=first_name, last_name=last_name, phone=phone, email=email,
+                                                  zip=zip, password=password)
                 db.session.commit()
             except Exception, e:
                 return jsonify({'errors': {'email': 'Email already exists'}}), 400
