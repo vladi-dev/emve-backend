@@ -20,7 +20,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
-    active = db.Column(db.Boolean())
+    active = db.Column(db.Boolean(), default=False)
     confirmed_at = db.Column(db.DateTime())
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
@@ -28,6 +28,7 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(255))
     last_name = db.Column(db.String(255))
     middle_name = db.Column(db.String(255))
+    zip = db.Column(db.String(255))
     phone = db.Column(db.String(255))
     is_maven = db.Column(db.Boolean(), default=False)
     braintree_payment_id = db.Column(db.Integer, db.ForeignKey('braintree_payments.id'))
@@ -42,6 +43,9 @@ class User(db.Model, UserMixin):
         return {
             'id': self.id,
             'email': self.email,
-            'name': "{} {} {}".format(self.first_name, self.middle_name, self.last_name),
-            'braintree_payment_id': self.braintree_payment_id
+            'full_name': "{} {} {}".format(self.first_name, self.middle_name, self.last_name),
+            'braintree_payment_id': self.braintree_payment_id,
+            'first_name': self.first_name,
+            'middle_name': self.middle_name,
+            'last_name': self.last_name,
         }

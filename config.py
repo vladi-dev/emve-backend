@@ -28,7 +28,6 @@ SECURITY_POST_LOGIN_VIEW = '/admin/'
 SECURITY_POST_LOGOUT_VIEW = '/admin/'
 SECURITY_PASSWORD_HASH = 'bcrypt'
 SECURITY_PASSWORD_SALT = 'n5ieDVxeTvHbiweuiwJo6w'
-USER_IDENTITY_ATTRIBUTES = ['email', 'phone']
 
 
 # Map

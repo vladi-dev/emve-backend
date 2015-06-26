@@ -8,7 +8,7 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from flask_security.utils import verify_password
 from flask_admin import Admin
 from flask_cors import CORS
-from flask_jwt import JWT, current_user, verify_jwt
+from flask_jwt import JWT, current_user, verify_jwt, JWTError
 from flask_uwsgi_websocket import GeventWebSocket
 from flask_redis import FlaskRedis
 
@@ -42,9 +42,14 @@ jwt = JWT(app)
 @jwt.authentication_handler
 def authenticate(username, password):
     user = User.query.filter((User.email == username) | (User.phone == username)).one()
-    if user:
-        if verify_password(password, user.password):
-            return user
+
+    if not user or not verify_password(password, user.password):
+        raise JWTError('Invalid phone/email/password', 'We could not find any account associated with supplied information')
+
+    if not user.active:
+        raise JWTError('Activation required', 'Your account needs activation')
+
+    return user
 
 @jwt.user_handler
 def load_user(payload):
