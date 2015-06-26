@@ -1,7 +1,7 @@
 import json
 import gevent
 
-from app import app, redis, REDIS_CHAN
+from app import app, redis_client, REDIS_CHAN
 
 
 class WebsocketEventService(object):
@@ -31,7 +31,7 @@ class WebsocketEventService(object):
     def run(self):
         """Listens for new messages in Redis, and sends them to clients."""
         self.clients = list()
-        self.pubsub = redis.pubsub()
+        self.pubsub = redis_client.pubsub()
         self.pubsub.subscribe(REDIS_CHAN)
         for data in self.__iter_data():
             for client, id in self.clients:

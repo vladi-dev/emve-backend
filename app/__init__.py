@@ -10,6 +10,7 @@ from flask_admin import Admin
 from flask_cors import CORS
 from flask_jwt import JWT, current_user, verify_jwt
 from flask_uwsgi_websocket import GeventWebSocket
+from flask_redis import FlaskRedis
 
 
 # Create app
@@ -32,8 +33,8 @@ braintree.Configuration.configure(braintree.Environment.Sandbox,
                                   private_key=BRAINTREE_PRIVATE_KEY)
 
 
-red = redis.StrictRedis
-redis = red.from_url(REDIS_URL)
+redis_store = FlaskRedis.from_custom_provider(redis.StrictRedis, app)
+redis_client = redis_store._redis_client
 
 # JWT Token Auth
 jwt = JWT(app)
@@ -129,7 +130,7 @@ def websocket(ws):
                         message['order_id'] = order.id
                         message['user_id'] = order.user_id
                         message['event'] = 'client:track_order_{}'.format(order.id)
-                        redis.publish(REDIS_CHAN, json.dumps(message))
+                        redis_client.publish(REDIS_CHAN, json.dumps(message))
                         app.logger.info(u'{}: {}'.format(message['event'], json.dumps(message)))
                 else:
                     print 'break'
