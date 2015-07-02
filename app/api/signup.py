@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_security.utils import encrypt_password
+from flask_jwt import generate_token
 
 from app import db, redis_store, user_datastore
 from app.models.user import User
@@ -118,19 +119,23 @@ def _tryActivate(data):
                 return jsonify({'errors': {'activation_code': 'Wrong activation code'}}), 422
 
             try:
-                user_datastore.create_user(active=True, first_name=temp_user[1], last_name=temp_user[2], phone=temp_user[3],
+                user = user_datastore.create_user(active=True, first_name=temp_user[1], last_name=temp_user[2], phone=temp_user[3],
                                                   email=temp_user[4], zip=temp_user[5], password=temp_user[6])
                 db.session.commit()
+
+                # Generate JWT token to authenticate
+                token = generate_token(user)
 
                 # Remove from redis
                 # TODO remove all hashes with same email and/or phone
                 redis_store.delete(key)
 
+                return jsonify({'token': token}), 200
+
             except IntegrityError as e:
                 return jsonify({'errors': {'activation_code': 'Email already in use'}}), 422
 
 
-            return jsonify({}), 200
 
     return jsonify({'errors': {'activation_code': 'Activation code required'}}), 422
 

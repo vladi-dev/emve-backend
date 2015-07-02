@@ -4,6 +4,7 @@ import json
 
 from flask import Flask, render_template, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm.exc import NoResultFound
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_security.utils import verify_password
 from flask_admin import Admin
@@ -41,7 +42,10 @@ jwt = JWT(app)
 
 @jwt.authentication_handler
 def authenticate(username, password):
-    user = User.query.filter((User.email == username) | (User.phone == username)).one()
+    try:
+        user = User.query.filter((User.email == username) | (User.phone == username)).one()
+    except NoResultFound as e:
+        user = None
 
     if not user or not verify_password(password, user.password):
         raise JWTError('Invalid phone/email/password', 'We could not find any account associated with supplied information')
