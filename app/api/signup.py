@@ -4,6 +4,7 @@ from random import choice
 import phonenumbers
 from validate_email import validate_email
 from twilio.rest import TwilioRestClient
+from twilio.rest.exceptions import TwilioRestException
 
 from sqlalchemy.exc import IntegrityError
 
@@ -99,8 +100,12 @@ def _trySignup(data):
     # Send activation code via SMS
     client = TwilioRestClient(account_sid, auth_token)
 
-    message = client.messages.create(to=phone, from_="+13239094519",
-                                     body="Hello {}! Your activation code for Emve is: {}".format(first_name, activation_code))
+    try:
+        message = client.messages.create(to=phone, from_="+13239094519",
+                                         body="Hello {}! Your activation code for Emve is: {}".format(first_name,
+                                                                                                      activation_code))
+    except TwilioRestException as e:
+        return jsonify({'errors': {'phone': 'Could not send activation code to specified phone number'}}), 422
 
     return jsonify({'tempUserId': temp_user_id}), 200
 
