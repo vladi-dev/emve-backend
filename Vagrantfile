@@ -2,13 +2,21 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "chef/freebsd-10.0"
-  config.ssh.forward_agent = true
-  config.ssh.shell = 'sh'
-  config.vm.network "private_network", type: "dhcp"
-  config.vm.network "forwarded_port", guest: 5000, host: 5000
-  config.vm.synced_folder ".", "/vagrant", type: "nfs", id: "vagrant-root"
-  config.vm.provider :virtualbox do |vb|
-    #vb.gui = true
+  config.vm.guest = :freebsd
+  config.vm.network "private_network", ip: "10.0.1.11"
+
+  # Use NFS as a shared folder
+  config.vm.synced_folder ".", "/vagrant", :nfs => true, id: "vagrant-root"
+
+  config.vm.provider :virtualbox do |vb, override|
+    config.vm.box = "chef/freebsd-10.0"
+
+    # vb.customize ["startvm", :id, "--type", "gui"]
+    vb.customize ["modifyvm", :id, "--memory", "512"]
+    vb.customize ["modifyvm", :id, "--cpus", "2"]
+    vb.customize ["modifyvm", :id, "--hwvirtex", "on"]
+    vb.customize ["modifyvm", :id, "--audio", "none"]
+    vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+    vb.customize ["modifyvm", :id, "--nictype2", "virtio"]
   end
 end
