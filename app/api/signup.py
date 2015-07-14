@@ -88,6 +88,7 @@ def _trySignup(data):
 
     # Generate activation code
     activation_code = ''.join(choice(digits) for i in xrange(5))
+    activation_code = '11111' # TODO temporary
 
     # Store temporary user in redis
     temp_user_id = redis_store.incr('next_user_id')
@@ -117,6 +118,8 @@ def _tryActivate(data):
 
     if all([activation_code, temp_user_id]):
         key = "user:{}".format(temp_user_id)
+
+        # TODO refactor to hmgetall
         temp_user = redis_store.hmget(key, ['activation_code', 'first_name', 'last_name', 'phone', 'email', 'zip',
                                             'password'])
         if temp_user:
@@ -155,7 +158,7 @@ class SignupAPI(MethodView):
 
         if act == 'signup':
             return _trySignup(data)
-        if act == 'activate':
+        elif act == 'activate':
             return _tryActivate(data)
         else:
             return jsonify({'error': 'Invalid request'}), 400

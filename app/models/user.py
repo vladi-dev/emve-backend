@@ -1,4 +1,5 @@
 from app import db
+from app.models.maven_signup import MavenSignup
 
 from flask.ext.security import UserMixin, RoleMixin
 
@@ -49,3 +50,6 @@ class User(db.Model, UserMixin):
             'middle_name': self.middle_name,
             'last_name': self.last_name,
         }
+
+    def get_maven_signup(self):
+        return MavenSignup.query.filter(MavenSignup.user_id == self.id).first()
