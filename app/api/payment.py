@@ -1,14 +1,11 @@
-from pprint import pprint
+import braintree
 
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
 from app import db
-from app.models.user_address import UserAddress
 from app.models.braintree_payment import BraintreePayment
-
-import braintree
 
 
 class PaymentAPI(MethodView):
@@ -56,7 +53,6 @@ class PaymentAPI(MethodView):
             current_user.braintree_customer_id = result.customer.id
             db.session.add(current_user)
             db.session.commit()
-
 
         response = {}
         if result.is_success:

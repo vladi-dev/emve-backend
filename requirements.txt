@@ -38,3 +38,4 @@ py-bcrypt
 geoalchemy2
 Shapely
 git+https://github.com/emve-dev/flask-jwt.git@support-websocket#egg=flask-jwt-0.2.0
+dlnvalidation

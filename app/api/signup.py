@@ -17,11 +17,11 @@ from app import db, redis_store, user_datastore
 from app.models.user import User
 
 
-account_sid = "AC464c9fb385dc9360c1457d5f1f67d6c1"
-auth_token = "4b688fb1f9c1be3498d9ff501739cb22"
+twilio_account_sid = "AC464c9fb385dc9360c1457d5f1f67d6c1"
+twilio_auth_token = "4b688fb1f9c1be3498d9ff501739cb22"
 
 
-def _trySignup(data):
+def _try_signup(data):
     first_name = data.get('firstName', None)
     last_name = data.get('lastName', None)
     phone = data.get('phone', None)
@@ -80,7 +80,6 @@ def _trySignup(data):
 
     # Return errors
     if errors:
-        print errors
         return jsonify({'errors': errors}), 422
 
     # Encrypt password
@@ -99,7 +98,7 @@ def _trySignup(data):
     redis_store.expire(key, 86400) # Expire after 24h
 
     # Send activation code via SMS
-    client = TwilioRestClient(account_sid, auth_token)
+    client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
 
     try:
         message = client.messages.create(to=phone, from_="+13239094519",
@@ -112,7 +111,7 @@ def _trySignup(data):
 
 
 
-def _tryActivate(data):
+def _try_activate(data):
     activation_code = data.get('activationCode', None)
     temp_user_id = data.get('tempUserId', None)
 
@@ -143,8 +142,6 @@ def _tryActivate(data):
             except IntegrityError as e:
                 return jsonify({'errors': {'activation_code': 'Email already in use'}}), 422
 
-
-
     return jsonify({'errors': {'activation_code': 'Activation code required'}}), 422
 
 
@@ -157,9 +154,9 @@ class SignupAPI(MethodView):
         act = request.args.get('act', None)
 
         if act == 'signup':
-            return _trySignup(data)
+            return _try_signup(data)
         elif act == 'activate':
-            return _tryActivate(data)
+            return _try_activate(data)
         else:
             return jsonify({'error': 'Invalid request'}), 400
 
@@ -171,7 +168,7 @@ class SignupAPI(MethodView):
 
 def validate_and_convert_phone(raw_phone):
     if not raw_phone:
-        return
+        return False
 
     if raw_phone[0] == '+':
         # Phone number may already be in E.164 format.

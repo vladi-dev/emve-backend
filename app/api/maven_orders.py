@@ -21,7 +21,6 @@ def maven_only(fn):
 class MavenOrdersAPI(MethodView):
 
     @jwt_required()
-    @maven_only
     def get(self, id=None):
         q = Order.query
 
