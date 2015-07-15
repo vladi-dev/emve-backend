@@ -24,18 +24,21 @@ class MavenSignup(db.Model):
     felony = db.Column(db.Boolean(), nullable=False, default=False)
     created_at = db.Column(db.DateTime(), default=datetime.now)
 
+
 class ValidationError(Exception):
     pass
+
 
 def validate_sex(sex):
     try:
         sex = int(sex)
-    except TypeError:
+    except Exception:
         raise ValidationError("Sex required")
 
     if sex not in sexes.keys():
         raise ValidationError("Invalid sex")
     return sex
+
 
 def validate_dl(dl):
     if not dl or 'number' not in dl or 'state' not in dl:
@@ -54,6 +57,7 @@ def validate_dl(dl):
 
         return dl
 
+
 def validate_ssn(ssn):
     if not ssn:
         raise ValidationError('Social security required')
@@ -63,6 +67,7 @@ def validate_ssn(ssn):
         if not re.match("^\d{9}$", ssn):
             raise ValidationError("Invalid social security number")
         return ssn
+
 
 def validate_dob(dob):
     if not dob:
@@ -74,10 +79,11 @@ def validate_dob(dob):
             raise ValidationError("Invalid date of birth")
     return dob
 
+
 def validate_felony(felony):
     try:
         felony = int(felony)
-    except TypeError:
+    except Exception:
         raise ValidationError("Felony required1")
 
     if felony != 1:
@@ -110,14 +116,14 @@ def validate_routing(routing):
             r = [int(c) for c in routing]
 
             if len(r) != 9:
-                raise ValidationError("Invalid routing number")
+                raise Exception()
 
             checksum = (
                            7 * (r[0] + r[3] + r[6]) +
                            3 * (r[1] + r[4] + r[7]) +
                            9 * (r[2] + r[5])
                        ) % 10
-        except ValueError:
+        except Exception:
             raise ValidationError("Invalid routing number")
 
         if r[8] != checksum:
