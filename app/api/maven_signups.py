@@ -42,7 +42,8 @@ def _try_step1(data, temp_maven_signup_id):
         temp_maven_signup = {'id': temp_maven_signup_id, 'user_id': current_user.id}
 
     temp_maven_signup['ssn'] = clean['ssn']
-    temp_maven_signup['dl'] = clean['dl']
+    temp_maven_signup['dl_state'] = clean['dl']['state']
+    temp_maven_signup['dl_number'] = clean['dl']['number']
     temp_maven_signup['dob'] = clean['dob']
     temp_maven_signup['sex'] = clean['sex']
     temp_maven_signup['felony'] = clean['felony']
@@ -97,7 +98,8 @@ def _try_confirm(temp_maven_signup_id):
 
     maven_signup = MavenSignup()
     maven_signup.ssn = temp_maven_signup['ssn']
-    maven_signup.dl = temp_maven_signup['dl']
+    maven_signup.dl_number = temp_maven_signup['dl_number']
+    maven_signup.dl_state = temp_maven_signup['dl_state']
     maven_signup.dob = dob.date()
     maven_signup.sex = temp_maven_signup['sex']
     maven_signup.felony = temp_maven_signup['felony']
@@ -125,6 +127,7 @@ def _get_temp_maven_signup(temp_maven_signup_id):
     if not temp_maven_signup or int(temp_maven_signup['user_id']) != current_user.id:
         raise Exception('Invalid user')
 
+    temp_maven_signup['dl'] = {'state': temp_maven_signup['dl_state'], 'number': temp_maven_signup['dl_number']}
     dob = datetime.strptime(temp_maven_signup['dob'], "%Y-%m-%dT%H:%M:%S.%fZ")
     temp_maven_signup['dob_human'] = dob.strftime("%m/%d/%Y")
     temp_maven_signup['sex_human'] = sexes[int(temp_maven_signup['sex'])]

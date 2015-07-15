@@ -18,22 +18,11 @@ class MavenSignup(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     ssn = db.Column(db.String(80))
     dob = db.Column(db.Date())
-    dl = db.Column(db.String(80))
+    dl_state = db.Column(db.String(80))
+    dl_number = db.Column(db.String(80))
     sex = db.Column(db.SmallInteger)
     felony = db.Column(db.Boolean(), nullable=False, default=False)
     created_at = db.Column(db.DateTime(), default=datetime.now)
-
-    @property
-    def serialize(self):
-        return {
-            'id': self.id,
-            'ssn': self.ssn,
-            'dob': self.dob,
-            'dl': self.dl,
-            'sex': self.sex,
-            'felony': self.felony
-        }
-
 
 class ValidationError(Exception):
     pass
@@ -41,7 +30,7 @@ class ValidationError(Exception):
 def validate_sex(sex):
     try:
         sex = int(sex)
-    except ValueError:
+    except TypeError:
         raise ValidationError("Sex required")
 
     if sex not in sexes.keys():
@@ -49,13 +38,20 @@ def validate_sex(sex):
     return sex
 
 def validate_dl(dl):
-    # TODO add state
-    if not dl:
-        raise ValidationError("Driver's license required")
+    if not dl or 'number' not in dl or 'state' not in dl:
+        raise ValidationError("Driver's license number and state required")
     else:
-        dl = str(dl)
-        if not dl_is_valid(dl, "CA"):
+        dl_number = str(dl['number'])
+        dl_state = str(dl['state'])
+
+        try:
+            dl_valid = dl_is_valid(dl_number, dl_state)
+        except Exception:
+            raise ValidationError("Invalid driver's license state")
+
+        if not dl_valid:
             raise ValidationError("Invalid driver's license")
+
         return dl
 
 def validate_ssn(ssn):
