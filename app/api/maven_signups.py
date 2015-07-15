@@ -1,13 +1,13 @@
 from datetime import datetime
 from collections import OrderedDict
 
-
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
 from app import db, redis_store
-from app.models.maven_signup import MavenSignup, ValidationError, validate_ssn, validate_dl, validate_dob, validate_felony, \
+from app.models.maven_signup import MavenSignup, ValidationError, validate_ssn, validate_dl, validate_dob, \
+    validate_felony, \
     validate_sex, validate_account, validate_routing, sexes
 
 
@@ -23,6 +23,7 @@ def _try_step1(data, temp_maven_signup_id):
         ('felony', validate_felony)
     ])
 
+    # Validate data
     for field, validate in validation_map.items():
         try:
             value = data[field] if field in data else None
@@ -34,13 +35,15 @@ def _try_step1(data, temp_maven_signup_id):
     if errors:
         return jsonify({'errors': errors.values()}), 422
 
+    # Get temp maven signup if exists
     if temp_maven_signup_id:
         key, temp_maven_signup = _get_temp_maven_signup(temp_maven_signup_id)
     else:
-        # Store temporary user in redis
+        # Create new temp maven signup
         temp_maven_signup_id = redis_store.incr('next_maven_signup_id')
         temp_maven_signup = {'id': temp_maven_signup_id, 'user_id': current_user.id}
 
+    # Save data to redis
     temp_maven_signup['ssn'] = clean['ssn']
     temp_maven_signup['dl_state'] = clean['dl']['state']
     temp_maven_signup['dl_number'] = clean['dl']['number']
@@ -51,9 +54,10 @@ def _try_step1(data, temp_maven_signup_id):
 
     key = "maven_signup:{}".format(temp_maven_signup_id)
     redis_store.hmset(key, temp_maven_signup)
-    redis_store.expire(key, 86400) # Expire after 24h
+    redis_store.expire(key, 86400)  # Expire after 24h
 
     return jsonify({'tempMavenSignupId': temp_maven_signup_id}), 200
+
 
 def _try_step2(data, temp_maven_signup_id):
     # Get temp maven signup from redis
@@ -67,6 +71,7 @@ def _try_step2(data, temp_maven_signup_id):
         ('routing', validate_routing),
     ])
 
+    # Validate data
     for field, validate in validation_map.items():
         try:
             value = data[field] if field in data else None
@@ -74,26 +79,30 @@ def _try_step2(data, temp_maven_signup_id):
         except ValidationError as e:
             errors[field] = str(e)
 
+    # Return errors
     if errors:
         return jsonify({'errors': errors.values()}), 422
 
+    # Save data to redis
     temp_maven_signup['account'] = clean['account']
     temp_maven_signup['routing'] = clean['routing']
     temp_maven_signup['completed'] = 1
 
     redis_store.hmset(key, temp_maven_signup)
-    redis_store.expire(key, 86400) # Expire after 24h
+    redis_store.expire(key, 86400)  # Expire after 24h
 
     return jsonify({'tempMavenSignupId': temp_maven_signup['id']}), 200
+
 
 def _try_confirm(temp_maven_signup_id):
     # Get temp maven signup from redis
     key, temp_maven_signup = _get_temp_maven_signup(temp_maven_signup_id)
 
-    # Find temp maven signup in redis
+    # Return error if temp maven signup not found or is incomplete
     if not temp_maven_signup or not temp_maven_signup['completed']:
         raise Exception('Temp maven signup incomplete')
 
+    # Convert dob from rfc339 to python datetime
     dob = datetime.strptime(temp_maven_signup['dob'], "%Y-%m-%dT%H:%M:%S.%fZ")
 
     maven_signup = MavenSignup()
@@ -115,23 +124,32 @@ def _try_confirm(temp_maven_signup_id):
 
     return jsonify({'success': 1}), 200
 
+
 def _get_temp_maven_signup(temp_maven_signup_id):
-    # Validate temp_maven_signup_id
+    # Require temp_maven_signup_id
     if not temp_maven_signup_id:
         raise Exception('Missing temp_maven_signup_id')
 
     key = "maven_signup:{}".format(temp_maven_signup_id)
 
+    # Get temp maven signup from redis
     temp_maven_signup = redis_store.hgetall(key)
 
+    # Return error if temp maven signup not found or doesn't belong to current user
     if not temp_maven_signup or int(temp_maven_signup['user_id']) != current_user.id:
         raise Exception('Invalid user')
 
+    # Convert dl to suitable format (json)
     temp_maven_signup['dl'] = {'state': temp_maven_signup['dl_state'], 'number': temp_maven_signup['dl_number']}
+
+    # Convert dob from rfc3339 to human readable format
     dob = datetime.strptime(temp_maven_signup['dob'], "%Y-%m-%dT%H:%M:%S.%fZ")
     temp_maven_signup['dob_human'] = dob.strftime("%m/%d/%Y")
+
+    # Convert sex to human readable format
     temp_maven_signup['sex_human'] = sexes[int(temp_maven_signup['sex'])]
 
+    # Conver ssn to human readable format
     ssn = temp_maven_signup['ssn']
     ssn = ssn[:3] + "-" + ssn[3:5] + "-" + ssn[5:]
     temp_maven_signup['ssn_human'] = ssn
@@ -150,7 +168,6 @@ class MavenSignupAPI(MethodView):
             return jsonify({'signup': temp_maven_signup})
         except:
             return jsonify({'signup': 0})
-
 
     @jwt_required()
     def post(self, temp_maven_signup_id=None):
