@@ -2,7 +2,7 @@ import redis
 import gevent
 import json
 
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.exc import NoResultFound
 from flask_security import Security, SQLAlchemyUserDatastore
@@ -127,6 +127,8 @@ def bt_submerchant():
 
     except Exception as ex:
         pass
+
+    return Response(status=200)
 
 
 # Websocket url for event service
