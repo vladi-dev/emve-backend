@@ -120,6 +120,7 @@ def bt_submerchant():
             maven = User.query.filter(User.braintree_merchant_account_id == notification.merchant_account.id).one()
             maven_signup = MavenSignup.query.filter(MavenSignup.user_id == maven.id).filter(MavenSignup.status == 'check').one()
             maven_signup.braintree_merchant_account_status = notification.kind
+            maven_signup.status = 'waiting_approval'
             db.session.add(maven_signup)
             db.session.commit()
 
