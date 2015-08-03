@@ -111,6 +111,7 @@ def home():
     return render_template('index.html')
 
 
+""" Webhook for braintree gateway for notifications about submerchant account approval/denial """
 @app.route('/bt/submerchant', methods=('GET', 'POST'))
 def bt_submerchant():
     try:
@@ -118,22 +119,31 @@ def bt_submerchant():
             return braintree.WebhookNotification.verify(request.args['bt_challenge'])
 
         elif request.method == 'POST':
-            notification = braintree.WebhookNotification.parse(
-                str(request.form['bt_signature']), request.form['bt_payload'])
-            from pprint import pprint
+            # Getting notification from braintree webhook
+            notification = braintree.WebhookNotification.parse(str(request.form['bt_signature']), request.form['bt_payload'])
 
-            pprint(notification)
-
+            # Finding maven signup related to this notification
             maven_signup = MavenSignup.query\
-                .filter(MavenSignup.braintree_merchant_account_id == notification.merchant_account.id)\
-                .filter(MavenSignup.status == 'check').one()
-            maven_signup.braintree_merchant_account_status = notification.kind
-            maven_signup.status = 'waiting_approval'
+                .filter(MavenSignup.bt_merch_acc_id == notification.merchant_account.id)\
+                .filter(MavenSignup.status == 'check')\
+                .one()
+
+            # Setting braintree merchant account status
+            maven_signup.bt_merch_acc_status = notification.kind
+
+            # Save decline reason if declined
+            if notification.kind == braintree.WebhookNotification.Kind.SubMerchantAccountDeclined:
+                # Setting maven signup status
+                maven_signup.bt_merch_acc_decline_reason = notification.message
+
+            # Setting maven signup status - require action from admin
+            maven_signup.status = 'action_required'
+
+            # Saving
             db.session.add(maven_signup)
             db.session.commit()
 
     except Exception as ex:
-        print str(ex)
         pass
 
     return Response(status=200)

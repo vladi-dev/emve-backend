@@ -41,9 +41,9 @@ class MavenSignup(db.Model):
     status = db.Column(db.String(80)) # new, pending, awaiting, approved, declined
     decline_reason = db.Column(db.String(80))
     created_at = db.Column(db.DateTime(), default=datetime.now)
-    braintree_merchant_account_id = db.Column(db.String(255))
-    braintree_merchant_account_status = db.Column(db.String(255))
-    braintree_decline_reason = db.Column(db.String(80))
+    bt_merch_acc_id = db.Column(db.String(255))
+    bt_merch_acc_status = db.Column(db.String(255))
+    bt_merch_acc_decline_reason = db.Column(db.String(80))
 
     def approve(self):
         try:
@@ -87,10 +87,10 @@ class MavenSignup(db.Model):
         })
 
         if not result.is_success:
-            self.braintree_decline_reason = ' '.join([e.message for e in result.errors.deep_errors])
+            self.bt_merch_acc_decline_reason = ' '.join([e.message for e in result.errors.deep_errors])
         else:
-            self.braintree_merchant_account_id = result.merchant_account.id
-            self.braintree_merchant_account_status = result.merchant_account.status
+            self.bt_merch_acc_id = result.merchant_account.id
+            self.bt_merch_acc_status = result.merchant_account.status
 
         db.session.add(self)
         db.session.commit()
