@@ -86,6 +86,8 @@ class MavenSignup(db.Model):
             raise BraintreeResultError(result.errors.deep_errors)
 
         self.user.braintree_merchant_account_id = result.merchant_account.id
+        db.session.add(self.user)
+        db.session.commit()
 
         return result
 
