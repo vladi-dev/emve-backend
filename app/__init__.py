@@ -8,6 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_security.utils import verify_password
 from flask_admin import Admin
+from flask_admin.contrib import rediscli
 from flask_cors import CORS
 from flask_jwt import JWT, current_user, verify_jwt, JWTError
 from flask_uwsgi_websocket import GeventWebSocket
@@ -79,13 +80,15 @@ security = Security(app, user_datastore)
 
 
 # Admin
-adm = Admin(app, name='Emve')
+adm = Admin(app, name='Emve', template_mode='bootstrap2')
 
-from admin.views import UserModelView, UserAddressModelView, OrderModelView
+from admin.views import UserModelView, UserAddressModelView, OrderModelView, MavenSignupModelView
 
+adm.add_view(rediscli.RedisCli(redis_client))
 adm.add_view(UserModelView(db.session))
 adm.add_view(UserAddressModelView(db.session))
 adm.add_view(OrderModelView(db.session))
+adm.add_view(MavenSignupModelView(db.session))
 
 
 # Views

@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+import braintree
 from dlnvalidation import is_valid as dl_is_valid
 
 from app import db
@@ -11,18 +12,77 @@ sexes = {
     9: 'Not applicable',
 }
 
+class BraintreeResultError(Exception):
+    def __init__(self, deep_errors):
+        self.deep_errors = deep_errors
+
+    def __str__(self):
+        return ' '.join([e.message for e in self.deep_errors])
+
+
 
 class MavenSignup(db.Model):
     __tablename__ = 'maven_signups'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('maven_signups'))
     ssn = db.Column(db.String(80))
     dob = db.Column(db.Date())
     dl_state = db.Column(db.String(80))
     dl_number = db.Column(db.String(80))
     sex = db.Column(db.SmallInteger)
     felony = db.Column(db.Boolean(), nullable=False, default=False)
+    account = db.Column(db.String(80))
+    routing = db.Column(db.String(80))
+    address = db.Column(db.String(80))
+    city = db.Column(db.String(80))
+    state = db.Column(db.String(80))
+    zip = db.Column(db.String(80))
+    status = db.Column(db.String(80))
     created_at = db.Column(db.DateTime(), default=datetime.now)
+
+    def approve(self):
+        try:
+            result = self.create_merchant()
+            self.user.braintree_merchant_account_id = result.merchant_account.id
+            self.user.is_maven = True
+            self.status = 'approved'
+            db.session.add(self)
+            db.session.commit()
+            return True
+        except Exception as ex:
+            raise
+
+    def create_merchant(self):
+        u = self.user
+        result = braintree.MerchantAccount.create({
+            'individual': {
+                'first_name': u.first_name,
+                'last_name': u.last_name,
+                'email': u.email,
+                'phone': u.phone,
+                'date_of_birth': self.dob,
+                'ssn': self.ssn,
+                'address': {
+                    'street_address': self.address,
+                    'locality': self.city,
+                    'region': self.state,
+                    'postal_code': self.zip
+                }
+            },
+            'funding': {
+                'destination': braintree.MerchantAccount.FundingDestination.Bank,
+                'account_number': self.account,
+                'routing_number': self.routing,
+            },
+            "tos_accepted": True,
+            "master_merchant_account_id": "nwts28jk5v8vpn37",
+        })
+
+        if not result.is_success:
+            raise BraintreeResultError(result.errors.deep_errors)
+
+        return result
 
 
 class ValidationError(Exception):
@@ -130,3 +190,6 @@ def validate_routing(routing):
             raise ValidationError("Invalid routing number")
 
         return routing
+
+def validate_string(string):
+    return string

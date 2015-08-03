@@ -8,7 +8,7 @@ from flask_jwt import jwt_required, current_user
 from app import db, redis_store
 from app.models.maven_signup import MavenSignup, ValidationError, validate_ssn, validate_dl, validate_dob, \
     validate_felony, \
-    validate_sex, validate_account, validate_routing, sexes
+    validate_sex, validate_account, validate_routing, validate_string, sexes
 
 
 def _try_step1(data, temp_maven_signup_id):
@@ -69,6 +69,11 @@ def _try_step2(data, temp_maven_signup_id):
     validation_map = OrderedDict([
         ('account', validate_account),
         ('routing', validate_routing),
+        # TODO: make real validation
+        ('address', validate_string),
+        ('city', validate_string),
+        ('state', validate_string),
+        ('zip', validate_string),
     ])
 
     # Validate data
@@ -86,6 +91,10 @@ def _try_step2(data, temp_maven_signup_id):
     # Save data to redis
     temp_maven_signup['account'] = clean['account']
     temp_maven_signup['routing'] = clean['routing']
+    temp_maven_signup['address'] = clean['address']
+    temp_maven_signup['city'] = clean['city']
+    temp_maven_signup['state'] = clean['state']
+    temp_maven_signup['zip'] = clean['zip']
     temp_maven_signup['completed'] = 1
 
     redis_store.hmset(key, temp_maven_signup)
@@ -114,7 +123,12 @@ def _try_confirm(temp_maven_signup_id):
     maven_signup.felony = temp_maven_signup['felony']
     maven_signup.account = temp_maven_signup['account']
     maven_signup.routing = temp_maven_signup['routing']
+    maven_signup.address = temp_maven_signup['address']
+    maven_signup.city = temp_maven_signup['city']
+    maven_signup.state = temp_maven_signup['state']
+    maven_signup.zip = temp_maven_signup['zip']
     maven_signup.user_id = current_user.id
+    maven_signup.status = 'check'
 
     redis_store.delete(key)
 

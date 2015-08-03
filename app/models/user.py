@@ -35,6 +35,7 @@ class User(db.Model, UserMixin):
     braintree_payment_id = db.Column(db.Integer, db.ForeignKey('braintree_payments.id'))
     braintree_payment = db.relationship('BraintreePayment', foreign_keys=[braintree_payment_id], backref=db.backref('users'))
     braintree_customer_id = db.Column(db.String(255))
+    braintree_merchant_account_id = db.Column(db.String(255))
 
     def __unicode__(self):
         return self.email

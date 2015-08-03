@@ -1,0 +1,9 @@
+{% extends 'admin/model/details.html' %}
+
+{% block body %}
+{{ super() }}
+<div class="well" style="max-width: 400px;">
+    <a class="btn btn-large btn-block btn-primary" href="{{ url_for('.approve', id=get_pk_value(model))}}" h>Approve</a>
+    <a class="btn btn-large btn-block btn-danger" type="button">Reject</a>
+</div>
+{% endblock %}
