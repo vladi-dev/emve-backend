@@ -106,6 +106,10 @@ ws_event_service.start()
 def home():
     return render_template('index.html')
 
+@app.route('/bt/submerchant')
+def bt_submerchant():
+    return braintree.WebhookNotification.verify(request.args['bt_challenge'])
+
 
 # Websocket url for event service
 @ws.route('/websocket')
