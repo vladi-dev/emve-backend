@@ -34,12 +34,12 @@ braintree.Configuration.configure(braintree.Environment.Sandbox,
                                   public_key=BRAINTREE_PUBLIC_KEY,
                                   private_key=BRAINTREE_PRIVATE_KEY)
 
-
 redis_store = FlaskRedis.from_custom_provider(redis.StrictRedis, app)
 redis_client = redis_store._redis_client
 
 # JWT Token Auth
 jwt = JWT(app)
+
 
 @jwt.authentication_handler
 def authenticate(username, password):
@@ -49,12 +49,14 @@ def authenticate(username, password):
         user = None
 
     if not user or not verify_password(password, user.password):
-        raise JWTError('Invalid phone/email/password', 'We could not find any account associated with supplied information')
+        raise JWTError('Invalid phone/email/password',
+                       'We could not find any account associated with supplied information')
 
     if not user.active:
         raise JWTError('Activation required', 'Your account needs activation')
 
     return user
+
 
 @jwt.user_handler
 def load_user(payload):
@@ -94,6 +96,7 @@ adm.add_view(MavenSignupModelView(db.session))
 
 # Views
 from app.api.views import mod as api
+
 app.register_blueprint(api)
 
 # Websocket
@@ -107,6 +110,7 @@ ws_event_service.start()
 def home():
     return render_template('index.html')
 
+
 @app.route('/bt/submerchant', methods=('GET', 'POST'))
 def bt_submerchant():
     try:
@@ -117,10 +121,12 @@ def bt_submerchant():
             notification = braintree.WebhookNotification.parse(
                 str(request.form['bt_signature']), request.form['bt_payload'])
             from pprint import pprint
+
             pprint(notification)
 
-            maven = User.query.filter(User.braintree_merchant_account_id == notification.merchant_account.id).one()
-            maven_signup = MavenSignup.query.filter(MavenSignup.user_id == maven.id).filter(MavenSignup.status == 'check').one()
+            maven_signup = MavenSignup.query\
+                .filter(MavenSignup.braintree_merchant_account_id == notification.merchant_account.id)\
+                .filter(MavenSignup.status == 'check').one()
             maven_signup.braintree_merchant_account_status = notification.kind
             maven_signup.status = 'waiting_approval'
             db.session.add(maven_signup)
