@@ -126,6 +126,7 @@ def bt_submerchant():
                 maven_signup.decline()
 
     except Exception as ex:
+        print str(ex)
         pass
 
     return Response(status=200)
