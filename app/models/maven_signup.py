@@ -51,6 +51,11 @@ class MavenSignup(db.Model):
         except Exception as ex:
             raise
 
+    def decline(self):
+        self.status = 'declined'
+        db.session.add(self)
+        db.session.commit()
+
     def create_merchant(self):
         u = self.user
         result = braintree.MerchantAccount.create({

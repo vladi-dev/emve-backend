@@ -71,6 +71,7 @@ db = SQLAlchemy(app)
 # Import models
 from app.models.user import User, Role
 from app.models.user_address import UserAddress
+from app.models.maven_signup import MavenSignup
 from app.models.order import Order, OrderStatus
 from app.models.braintree_payment import BraintreePayment
 
@@ -117,11 +118,12 @@ def bt_submerchant():
                 str(request.form['bt_signature'], request.form['bt_payload']))
 
             maven = User.query.filter(User.braintree_merchant_account_id == notification.merchant_account.id).one()
+            maven_signup = MavenSignup.query.filter(MavenSignup.user_id == maven.id).filter(MavenSignup.status == 'check').one()
 
             if notification.kind == braintree.WebhookNotification.Kind.SubMerchantAccountApproved:
-                maven.approve()
+                maven_signup.approve()
             elif notification.kind == braintree.WebhookNotification.Kind.SubMerchantAccountDeclined:
-                maven.decline()
+                maven_signup.decline()
 
     except Exception as ex:
         pass
