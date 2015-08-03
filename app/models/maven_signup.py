@@ -43,8 +43,6 @@ class MavenSignup(db.Model):
 
     def approve(self):
         try:
-            result = self.create_merchant()
-            self.user.braintree_merchant_account_id = result.merchant_account.id
             self.user.is_maven = True
             self.status = 'approved'
             db.session.add(self)
@@ -81,6 +79,8 @@ class MavenSignup(db.Model):
 
         if not result.is_success:
             raise BraintreeResultError(result.errors.deep_errors)
+
+        self.user.braintree_merchant_account_id = result.merchant_account.id
 
         return result
 

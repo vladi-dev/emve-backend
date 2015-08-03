@@ -106,9 +106,25 @@ ws_event_service.start()
 def home():
     return render_template('index.html')
 
-@app.route('/bt/submerchant')
+@app.route('/bt/submerchant', methods=('GET', 'POST'))
 def bt_submerchant():
-    return braintree.WebhookNotification.verify(request.args['bt_challenge'])
+    try:
+        if request.method == 'GET':
+            return braintree.WebhookNotification.verify(request.args['bt_challenge'])
+
+        elif request.method == 'POST':
+            notification = braintree.WebhookNotification.parse(
+                str(request.form['bt_signature'], request.form['bt_payload']))
+
+            maven = User.query.filter(User.braintree_merchant_account_id == notification.merchant_account.id).one()
+
+            if notification.kind == braintree.WebhookNotification.Kind.SubMerchantAccountApproved:
+                maven.approve()
+            elif notification.kind == braintree.WebhookNotification.Kind.SubMerchantAccountDeclined:
+                maven.decline()
+
+    except Exception as ex:
+        pass
 
 
 # Websocket url for event service

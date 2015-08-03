@@ -54,7 +54,7 @@ class MavenSignupModelView(SecureModelView):
     def approve(self, id):
         try:
             maven_signup = MavenSignup.query.filter(MavenSignup.id==id).one()
-            maven_signup.approve()
+            maven_signup.create_merchant()
             flash('Maven signup approved')
         except BraintreeResultError as ex:
             flash('Maven signup wasnt approved. ' + str(ex), 'error')
