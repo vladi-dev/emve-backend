@@ -116,20 +116,14 @@ def bt_submerchant():
         elif request.method == 'POST':
             notification = braintree.WebhookNotification.parse(
                 str(request.form['bt_signature']), request.form['bt_payload'])
-            from pprint import pprint
-            pprint(notification)
-            pprint(request.form)
 
             maven = User.query.filter(User.braintree_merchant_account_id == notification.merchant_account.id).one()
             maven_signup = MavenSignup.query.filter(MavenSignup.user_id == maven.id).filter(MavenSignup.status == 'check').one()
-
-            if notification.kind == braintree.WebhookNotification.Kind.SubMerchantAccountApproved:
-                maven_signup.approve()
-            elif notification.kind == braintree.WebhookNotification.Kind.SubMerchantAccountDeclined:
-                maven_signup.decline()
+            maven_signup.braintree_merchant_account_status = notification.kind
+            db.session.add(maven_signup)
+            db.session.commit()
 
     except Exception as ex:
-        print str(ex)
         pass
 
     return Response(status=200)

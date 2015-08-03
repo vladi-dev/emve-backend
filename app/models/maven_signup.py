@@ -38,8 +38,12 @@ class MavenSignup(db.Model):
     city = db.Column(db.String(80))
     state = db.Column(db.String(80))
     zip = db.Column(db.String(80))
-    status = db.Column(db.String(80))
+    status = db.Column(db.String(80)) # new, pending, awaiting, approved, declined
+    decline_reason = db.Column(db.String(80))
     created_at = db.Column(db.DateTime(), default=datetime.now)
+    braintree_merchant_account_id = db.Column(db.String(255))
+    braintree_merchant_account_status = db.Column(db.String(255))
+    braintree_decline_reason = db.Column(db.String(80))
 
     def approve(self):
         try:
@@ -83,13 +87,13 @@ class MavenSignup(db.Model):
         })
 
         if not result.is_success:
-            raise BraintreeResultError(result.errors.deep_errors)
+            self.braintree_decline_reason = ' '.join([e.message for e in result.errors.deep_errors])
+        else:
+            self.braintree_merchant_account_id = result.merchant_account.id
+            self.braintree_merchant_account_status = result.merchant_account.status
 
-        self.user.braintree_merchant_account_id = result.merchant_account.id
-        db.session.add(self.user)
+        db.session.add(self)
         db.session.commit()
-
-        return result
 
 
 class ValidationError(Exception):

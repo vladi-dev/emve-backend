@@ -42,7 +42,7 @@ class OrderModelView(SecureModelView):
 class MavenSignupModelView(SecureModelView):
     can_create = False
     can_edit = False
-    can_delete = False
+    can_delete = True
     can_view_details = True
     details_template = 'admin/maven_signup_details.html'
 
@@ -54,10 +54,8 @@ class MavenSignupModelView(SecureModelView):
     def approve(self, id):
         try:
             maven_signup = MavenSignup.query.filter(MavenSignup.id==id).one()
-            maven_signup.create_merchant()
+            maven_signup.approve()
             flash('Maven signup approved')
-        except BraintreeResultError as ex:
-            flash('Maven signup wasnt approved. ' + str(ex), 'error')
         except Exception as ex:
             flash('Error.' + str(ex), 'error')
 
