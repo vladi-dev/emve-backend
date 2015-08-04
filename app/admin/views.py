@@ -50,7 +50,7 @@ class MavenAccountModelView(SecureModelView):
         super(MavenAccountModelView, self).__init__(MavenAccount, session, url='maven_account', **kwargs)
 
     # TODO: use POST
-    @expose('/approve/<int:id>', methods=('GET',))
+    @expose('/approve/<int:id>', methods=('POST',))
     def approve(self, id):
         try:
             maven_signup = MavenAccount.query.filter(MavenAccount.id==id).one()

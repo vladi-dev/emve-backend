@@ -35,11 +35,11 @@ class MavenAccountStatus(db.Model):
 
     @classmethod
     def approved(cls):
-        return cls.query.filter_by(cls.name == 'approved').one()
+        return cls.query.filter(cls.name == 'approved').one()
 
     @classmethod
     def declined(cls):
-        return cls.query.filter_by(cls.name == 'declined').one()
+        return cls.query.filter(cls.name == 'declined').one()
 
 
 class MavenAccount(db.Model):
@@ -67,14 +67,17 @@ class MavenAccount(db.Model):
     bt_merch_acc_status = db.Column(db.String(255))
     bt_merch_acc_decline_reason = db.Column(db.String(80))
 
+    def is_action_required(self):
+        return self.status == MavenAccountStatus.action_required()
+
     def can_approve(self):
         if self.status == MavenAccountStatus.action_required() and self.bt_merch_acc_status == 'approved':
             return True
         return False
 
     def approve(self):
-        if not self.can_approve():
-            raise Exception("Cannot approve maven account")
+        # if not self.can_approve():
+        #     raise Exception("Cannot approve maven account")
 
         try:
             # TODO: check if braintree didn't decline and record is waiting for action

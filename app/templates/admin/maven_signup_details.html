@@ -2,8 +2,27 @@
 
 {% block body %}
 {{ super() }}
+
+{% if model.is_action_required(): %}
+
 <div class="well" style="max-width: 400px;">
-    <a class="btn btn-large btn-block btn-primary" href="{{ url_for('.approve', id=get_pk_value(model))}}" h>Approve</a>
+    <button class="btn btn-large btn-block btn-primary" data-url="{{ url_for('.approve', id=get_pk_value(model))}}"
+            onclick="return approve(this)">Approve
+    </button>
     <a class="btn btn-large btn-block btn-danger" type="button">Reject</a>
 </div>
+<script>
+    function approve(el) {
+        var msg = 'Approve?';
+        if (!confirm(msg))
+            return false;
+
+        var form = $('<form>', {
+            'action': $(el).data('url'),
+            'method': 'POST'
+        });
+        form.submit();
+    }
+</script>
+{% endif %}
 {% endblock %}
