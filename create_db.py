@@ -10,6 +10,7 @@ with app.app_context():
     db.drop_all()
     db.create_all()
 
+    # Order statuses
     statuses = ['new', 'accepted', 'completed', 'cancelled']
     for status in statuses:
         obj = OrderStatus()
@@ -37,6 +38,9 @@ with app.app_context():
                         order='Caramel Machiato, Cheese Bacon and Egg Burger, Croassaint, Cheese Danish',
                         special_instructions='Warm please', pickup_address='Closest Starbucks',
                         order_address=home_address.__unicode__(), user_id=client.id, phone=client.phone, coord=home_address.coord, pin=4513)
+
+    # Maven account statuses
+    statuses = ['new', 'pending', 'action_required', 'approved', 'declined']
 
     db.session.add(order)
 

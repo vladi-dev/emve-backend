@@ -6,7 +6,7 @@ from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
 from app import db, redis_store
-from app.models.maven_account import MavenAccount, ValidationError, validate_ssn, validate_dl, validate_dob, \
+from app.models.maven_account import MavenAccount, MavenAccountStatus, ValidationError, validate_ssn, validate_dl, validate_dob, \
     validate_felony, \
     validate_sex, validate_account, validate_routing, validate_string, sexes
 
@@ -128,7 +128,7 @@ def _try_confirm(temp_maven_signup_id):
     maven_signup.state = temp_maven_signup['state']
     maven_signup.zip = temp_maven_signup['zip']
     maven_signup.user_id = current_user.id
-    maven_signup.status = 'check'
+    maven_signup.status = MavenAccountStatus.getNew()
 
     redis_store.delete(key)
 

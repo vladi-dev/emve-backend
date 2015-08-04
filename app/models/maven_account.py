@@ -12,13 +12,21 @@ sexes = {
     9: 'Not applicable',
 }
 
-class BraintreeResultError(Exception):
-    def __init__(self, deep_errors):
-        self.deep_errors = deep_errors
+class MavenAccountStatus(db.Model):
+    __tablename__ = 'maven_account_statuses'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
 
-    def __str__(self):
-        return ' '.join([e.message for e in self.deep_errors])
+    def __unicode__(self):
+        return self.name
 
+    @classmethod
+    def getNew(cls):
+        return cls.query.filter_by(name='new').one()
+
+    @classmethod
+    def getApproved(cls):
+        return cls.query.filter_by(name='approved').one()
 
 
 class MavenAccount(db.Model):
@@ -38,8 +46,8 @@ class MavenAccount(db.Model):
     city = db.Column(db.String(80))
     state = db.Column(db.String(80))
     zip = db.Column(db.String(80))
-    # TODO: move status to separate table
-    status = db.Column(db.String(80)) # new, pending, awaiting, approved, declined
+    status_id = db.Column(db.Integer, db.ForeignKey('maven_account_statuses.id'))
+    status = db.relationship('MavenAccountStatus', foreign_keys=[status_id], backref=db.backref('maven_signups'))
     decline_reason = db.Column(db.String(80))
     created_at = db.Column(db.DateTime(), default=datetime.now)
     bt_merch_acc_id = db.Column(db.String(255))
@@ -51,7 +59,7 @@ class MavenAccount(db.Model):
             # TODO: check if braintree didn't decline and record is waiting for action
             # TODO: otherwise restrict approval
             self.user.is_maven = True
-            self.status = 'approved'
+            self.status = MavenAccountStatus.getApproved()
             db.session.add(self)
             db.session.commit()
             return True

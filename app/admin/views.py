@@ -10,7 +10,7 @@ from flask_security import current_user
 from app.models.user import User
 from app.models.user_address import UserAddress
 from app.models.order import Order
-from app.models.maven_account import MavenAccount, BraintreeResultError
+from app.models.maven_account import MavenAccount
 
 
 
