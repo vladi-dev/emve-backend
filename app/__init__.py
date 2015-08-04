@@ -73,7 +73,7 @@ db = SQLAlchemy(app)
 # Import models
 from app.models.user import User, Role
 from app.models.user_address import UserAddress
-from app.models.maven_account import MavenAccount
+from app.models.maven_account import MavenAccount, MavenAccountStatus
 from app.models.order import Order, OrderStatus
 from app.models.braintree_payment import BraintreePayment
 
@@ -125,7 +125,7 @@ def bt_submerchant():
             # Finding maven signup related to this notification
             maven_signup = MavenAccount.query\
                 .filter(MavenAccount.bt_merch_acc_id == notification.merchant_account.id)\
-                .filter(MavenAccount.status == 'check')\
+                .filter(MavenAccount.status == MavenAccountStatus.pending())\
                 .one()
 
             # Setting braintree merchant account status
@@ -137,7 +137,7 @@ def bt_submerchant():
                 maven_signup.bt_merch_acc_decline_reason = notification.message
 
             # Setting maven signup status - require action from admin
-            maven_signup.status = 'action_required'
+            maven_signup.status = MavenAccountStatus.action_required()
 
             # Saving
             db.session.add(maven_signup)

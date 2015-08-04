@@ -26,8 +26,12 @@ class MavenAccountStatus(db.Model):
         return cls.query.filter(cls.name == 'new').one()
 
     @classmethod
+    def pending(cls):
+        return cls.query.filter(cls.name == 'pending').one()
+
+    @classmethod
     def action_required(cls):
-        return cls.query.filter(cls.name == 'new').one()
+        return cls.query.filter(cls.name == 'action_required').one()
 
     @classmethod
     def approved(cls):
@@ -116,9 +120,11 @@ class MavenAccount(db.Model):
 
         if not result.is_success:
             self.bt_merch_acc_decline_reason = ' '.join([e.message for e in result.errors.deep_errors])
+            self.status = MavenAccountStatus.action_required()
         else:
             self.bt_merch_acc_id = result.merchant_account.id
             self.bt_merch_acc_status = result.merchant_account.status
+            self.status = MavenAccountStatus.pending()
 
         db.session.add(self)
         db.session.commit()
