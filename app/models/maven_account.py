@@ -12,6 +12,7 @@ sexes = {
     9: 'Not applicable',
 }
 
+
 class MavenAccountStatus(db.Model):
     __tablename__ = 'maven_account_statuses'
     id = db.Column(db.Integer, primary_key=True)
@@ -20,13 +21,21 @@ class MavenAccountStatus(db.Model):
     def __unicode__(self):
         return self.name
 
-    @classmethod
-    def getNew(cls):
-        return cls.query.filter_by(name='new').one()
+    @property
+    def new(self):
+        return self.__class__.query.filter(self.name == 'new').one()
 
-    @classmethod
-    def getApproved(cls):
-        return cls.query.filter_by(name='approved').one()
+    @property
+    def action_required(self):
+        return self.__class__.query.filter(self.name == 'new').one()
+
+    @property
+    def approved(self):
+        return self.__class__.query.filter_by(self.name == 'approved').one()
+
+    @property
+    def declined(self):
+        return self.__class__.query.filter_by(self.name == 'declined').one()
 
 
 class MavenAccount(db.Model):
@@ -54,7 +63,15 @@ class MavenAccount(db.Model):
     bt_merch_acc_status = db.Column(db.String(255))
     bt_merch_acc_decline_reason = db.Column(db.String(80))
 
+    def can_approve(self):
+        if self.status == MavenAccountStatus.action_required and self.bt_merch_acc_status == 'approved':
+            return True
+        return False
+
     def approve(self):
+        if not self.can_approve():
+            raise Exception("Cannot approve maven account")
+
         try:
             # TODO: check if braintree didn't decline and record is waiting for action
             # TODO: otherwise restrict approval
@@ -212,6 +229,7 @@ def validate_routing(routing):
             raise ValidationError("Invalid routing number")
 
         return routing
+
 
 def validate_string(string):
     return string
