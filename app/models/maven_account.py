@@ -72,7 +72,7 @@ class MavenAccount(db.Model):
         return self.status == MavenAccountStatus.action_required()
 
     def can_approve(self):
-        if self.status == MavenAccountStatus.action_required() and self.bt_merch_acc_status == 'approved':
+        if self.status == MavenAccountStatus.action_required() and self.bt_merch_acc_status == 'sub_merchant_account_approved':
             return True
         return False
 
