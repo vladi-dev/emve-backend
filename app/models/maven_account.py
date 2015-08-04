@@ -68,6 +68,7 @@ class MavenAccount(db.Model):
     bt_merch_acc_decline_reason = db.Column(db.String(80))
 
     def is_action_required(self):
+        return True
         return self.status == MavenAccountStatus.action_required()
 
     def can_approve(self):
@@ -75,25 +76,32 @@ class MavenAccount(db.Model):
             return True
         return False
 
-    def approve(self):
-        # if not self.can_approve():
-        #     raise Exception("Cannot approve maven account")
-
-        try:
-            # TODO: check if braintree didn't decline and record is waiting for action
-            # TODO: otherwise restrict approval
-            self.user.is_maven = True
-            self.status = MavenAccountStatus.approved()
-            db.session.add(self)
-            db.session.commit()
+    def can_decline(self):
+        if self.status == MavenAccountStatus.action_required():
             return True
-        except Exception as ex:
-            raise
+        return False
 
-    def decline(self):
-        # self.status = 'declined'
+    def approve(self):
+        if not self.can_approve():
+            raise Exception("Cannot approve maven account")
+
+        self.user.is_maven = True
+        self.status = MavenAccountStatus.approved()
         db.session.add(self)
         db.session.commit()
+
+        return True
+
+    def decline(self, reason):
+        if not self.can_decline():
+            raise Exception("Cannot decline maven account")
+
+        self.status = MavenAccountStatus.declined()
+        self.decline_reason = reason
+        db.session.add(self)
+        db.session.commit()
+
+        return True
 
     def create_merchant(self):
         u = self.user

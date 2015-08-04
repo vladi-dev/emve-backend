@@ -1,5 +1,4 @@
-from flask import flash, redirect, url_for
-from flask.helpers import flash
+from flask import redirect, url_for, request, flash
 from flask_admin import expose
 from flask_admin.babel import ngettext
 from flask_admin.contrib.sqla import ModelView
@@ -49,7 +48,6 @@ class MavenAccountModelView(SecureModelView):
     def __init__(self, session, **kwargs):
         super(MavenAccountModelView, self).__init__(MavenAccount, session, url='maven_account', **kwargs)
 
-    # TODO: use POST
     @expose('/approve/<int:id>', methods=('POST',))
     def approve(self, id):
         try:
@@ -57,7 +55,18 @@ class MavenAccountModelView(SecureModelView):
             maven_signup.approve()
             flash('Maven account approved')
         except Exception as ex:
-            flash('Error.' + str(ex), 'error')
+            flash('Error. ' + str(ex), 'error')
+
+        return redirect(url_for('.details_view', id=id))
+
+    @expose('/decline/<int:id>', methods=('POST',))
+    def decline(self, id):
+        try:
+            maven_signup = MavenAccount.query.filter(MavenAccount.id==id).one()
+            maven_signup.decline(request.form['decline_reason'])
+            flash('Maven account declined')
+        except Exception as ex:
+            flash('Error. ' + str(ex), 'error')
 
         return redirect(url_for('.details_view', id=id))
 
