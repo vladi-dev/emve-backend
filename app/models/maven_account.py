@@ -43,10 +43,10 @@ class MavenAccountStatus(db.Model):
 
 
 class MavenAccount(db.Model):
-    __tablename__ = 'maven_signups'
+    __tablename__ = 'maven_accounts'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('maven_signups'))
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('maven_accounts'))
     ssn = db.Column(db.String(80))
     dob = db.Column(db.Date())
     dl_state = db.Column(db.String(80))
@@ -60,7 +60,7 @@ class MavenAccount(db.Model):
     state = db.Column(db.String(80))
     zip = db.Column(db.String(80))
     status_id = db.Column(db.Integer, db.ForeignKey('maven_account_statuses.id'))
-    status = db.relationship('MavenAccountStatus', foreign_keys=[status_id], backref=db.backref('maven_signups'))
+    status = db.relationship('MavenAccountStatus', foreign_keys=[status_id], backref=db.backref('maven_accounts'))
     decline_reason = db.Column(db.String(80))
     created_at = db.Column(db.DateTime(), default=datetime.now)
     bt_merch_acc_id = db.Column(db.String(255))
@@ -68,7 +68,6 @@ class MavenAccount(db.Model):
     bt_merch_acc_decline_reason = db.Column(db.String(80))
 
     def is_action_required(self):
-        return True
         return self.status == MavenAccountStatus.action_required()
 
     def can_approve(self):
