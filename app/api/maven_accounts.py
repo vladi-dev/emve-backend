@@ -128,7 +128,7 @@ def _try_confirm(temp_maven_signup_id):
     maven_signup.state = temp_maven_signup['state']
     maven_signup.zip = temp_maven_signup['zip']
     maven_signup.user_id = current_user.id
-    maven_signup.status = MavenAccountStatus.new
+    maven_signup.status = MavenAccountStatus.new()
 
     redis_store.delete(key)
 

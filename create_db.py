@@ -3,6 +3,7 @@ from flask_security.utils import encrypt_password
 
 from app.models.order import Order, OrderStatus
 from app.models.user_address import UserAddress
+from app.models.maven_account import MavenAccountStatus
 
 with app.app_context():
     email = 'admin@emve.la'
@@ -41,6 +42,10 @@ with app.app_context():
 
     # Maven account statuses
     statuses = ['new', 'pending', 'action_required', 'approved', 'declined']
+    for status in statuses:
+        obj = MavenAccountStatus()
+        obj.name = status
+        db.session.add(obj)
 
     db.session.add(order)
 

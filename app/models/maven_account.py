@@ -21,21 +21,21 @@ class MavenAccountStatus(db.Model):
     def __unicode__(self):
         return self.name
 
-    @property
-    def new(self):
-        return self.__class__.query.filter(self.name == 'new').one()
+    @classmethod
+    def new(cls):
+        return cls.query.filter(cls.name == 'new').one()
 
-    @property
-    def action_required(self):
-        return self.__class__.query.filter(self.name == 'new').one()
+    @classmethod
+    def action_required(cls):
+        return cls.query.filter(cls.name == 'new').one()
 
-    @property
-    def approved(self):
-        return self.__class__.query.filter_by(self.name == 'approved').one()
+    @classmethod
+    def approved(cls):
+        return cls.query.filter_by(cls.name == 'approved').one()
 
-    @property
-    def declined(self):
-        return self.__class__.query.filter_by(self.name == 'declined').one()
+    @classmethod
+    def declined(cls):
+        return cls.query.filter_by(cls.name == 'declined').one()
 
 
 class MavenAccount(db.Model):
@@ -64,7 +64,7 @@ class MavenAccount(db.Model):
     bt_merch_acc_decline_reason = db.Column(db.String(80))
 
     def can_approve(self):
-        if self.status == MavenAccountStatus.action_required and self.bt_merch_acc_status == 'approved':
+        if self.status == MavenAccountStatus.action_required() and self.bt_merch_acc_status == 'approved':
             return True
         return False
 
@@ -76,7 +76,7 @@ class MavenAccount(db.Model):
             # TODO: check if braintree didn't decline and record is waiting for action
             # TODO: otherwise restrict approval
             self.user.is_maven = True
-            self.status = MavenAccountStatus.getApproved()
+            self.status = MavenAccountStatus.approved()
             db.session.add(self)
             db.session.commit()
             return True
@@ -84,7 +84,7 @@ class MavenAccount(db.Model):
             raise
 
     def decline(self):
-        self.status = 'declined'
+        # self.status = 'declined'
         db.session.add(self)
         db.session.commit()
 
