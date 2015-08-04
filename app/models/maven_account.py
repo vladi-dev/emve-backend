@@ -21,7 +21,7 @@ class BraintreeResultError(Exception):
 
 
 
-class MavenSignup(db.Model):
+class MavenAccount(db.Model):
     __tablename__ = 'maven_signups'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -38,6 +38,7 @@ class MavenSignup(db.Model):
     city = db.Column(db.String(80))
     state = db.Column(db.String(80))
     zip = db.Column(db.String(80))
+    # TODO: move status to separate table
     status = db.Column(db.String(80)) # new, pending, awaiting, approved, declined
     decline_reason = db.Column(db.String(80))
     created_at = db.Column(db.DateTime(), default=datetime.now)
@@ -47,6 +48,8 @@ class MavenSignup(db.Model):
 
     def approve(self):
         try:
+            # TODO: check if braintree didn't decline and record is waiting for action
+            # TODO: otherwise restrict approval
             self.user.is_maven = True
             self.status = 'approved'
             db.session.add(self)

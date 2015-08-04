@@ -10,7 +10,7 @@ from flask_security import current_user
 from app.models.user import User
 from app.models.user_address import UserAddress
 from app.models.order import Order
-from app.models.maven_signup import MavenSignup, BraintreeResultError
+from app.models.maven_account import MavenAccount, BraintreeResultError
 
 
 
@@ -39,7 +39,7 @@ class OrderModelView(SecureModelView):
     def __init__(self, session, **kwargs):
         super(OrderModelView, self).__init__(Order, session, url='order', **kwargs)
 
-class MavenSignupModelView(SecureModelView):
+class MavenAccountModelView(SecureModelView):
     can_create = False
     can_edit = False
     can_delete = True
@@ -47,15 +47,15 @@ class MavenSignupModelView(SecureModelView):
     details_template = 'admin/maven_signup_details.html'
 
     def __init__(self, session, **kwargs):
-        super(MavenSignupModelView, self).__init__(MavenSignup, session, url='maven_signup', **kwargs)
+        super(MavenAccountModelView, self).__init__(MavenAccount, session, url='maven_account', **kwargs)
 
     # TODO: use POST
     @expose('/approve/<int:id>', methods=('GET',))
     def approve(self, id):
         try:
-            maven_signup = MavenSignup.query.filter(MavenSignup.id==id).one()
+            maven_signup = MavenAccount.query.filter(MavenAccount.id==id).one()
             maven_signup.approve()
-            flash('Maven signup approved')
+            flash('Maven account approved')
         except Exception as ex:
             flash('Error.' + str(ex), 'error')
 
@@ -63,7 +63,7 @@ class MavenSignupModelView(SecureModelView):
 
     @action('approve', 'Approve', 'Approve?')
     def action_approve(self, ids):
-        query = MavenSignup.query.filter(MavenSignup.id.in_(ids))
+        query = MavenAccount.query.filter(MavenAccount.id.in_(ids))
         count = 0
         for m in query.all():
             if m.approve():

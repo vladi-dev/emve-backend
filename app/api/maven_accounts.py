@@ -6,7 +6,7 @@ from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
 from app import db, redis_store
-from app.models.maven_signup import MavenSignup, ValidationError, validate_ssn, validate_dl, validate_dob, \
+from app.models.maven_account import MavenAccount, ValidationError, validate_ssn, validate_dl, validate_dob, \
     validate_felony, \
     validate_sex, validate_account, validate_routing, validate_string, sexes
 
@@ -114,7 +114,7 @@ def _try_confirm(temp_maven_signup_id):
     # Convert dob from rfc339 to python datetime
     dob = datetime.strptime(temp_maven_signup['dob'], "%Y-%m-%dT%H:%M:%S.%fZ")
 
-    maven_signup = MavenSignup()
+    maven_signup = MavenAccount()
     maven_signup.ssn = temp_maven_signup['ssn']
     maven_signup.dl_number = temp_maven_signup['dl_number']
     maven_signup.dl_state = temp_maven_signup['dl_state']
