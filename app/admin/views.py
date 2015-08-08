@@ -28,6 +28,14 @@ class SecureGeoModelView(SecureModelViewMixin, GeoModelView):
 
 
 class UserModelView(SecureModelView):
+    inline_models = (Order,)
+    form_ajax_refs = {
+        'braintree_payment': {
+            'fields': ['token',],
+            'page_size': 10
+        }
+    }
+
     def __init__(self, session, **kwargs):
         super(UserModelView, self).__init__(User, session, url='user', **kwargs)
 

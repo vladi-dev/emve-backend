@@ -1,9 +1,11 @@
+import datetime
 from app import app, db, user_datastore
 from flask_security.utils import encrypt_password
 
 from app.models.order import Order, OrderStatus
 from app.models.user_address import UserAddress
 from app.models.maven_account import MavenAccountStatus
+from app.models.braintree_payment import BraintreePayment
 
 with app.app_context():
     email = 'admin@emve.la'
@@ -18,6 +20,16 @@ with app.app_context():
         obj.name = status
         db.session.add(obj)
 
+    client_payment = BraintreePayment()
+    client_payment.token = "hg4mm6"
+    client_payment.card_type = "American Express"
+    client_payment.bin = "378282"
+    client_payment.last_4 = "0005"
+    client_payment.expiration_month = "08"
+    client_payment.expiration_year = "2018"
+    client_payment.image_url = "https://assets.braintreegateway.com/payment_method_logo/american_express.png?environment=sandbox"
+    client_payment.created_at = datetime.datetime.now()
+
     home_address = UserAddress(label='Home', house='5050', street='sepulveda blvd', unit='124', city='Sherman Oaks',
                           state='CA', zip='91403', coord='0101000000D1D9B8B4D09D5DC079F64B7ACE144140')
     office_address = UserAddress(label='Office', house='2500', street='w macarthur blvd', unit='124', city='Santa Ana',
@@ -28,7 +40,7 @@ with app.app_context():
                  dict(email='maven@gmail.com', password=password, phone='8181111111', first_name='Sam', middle_name='L',
                       last_name='Jackson', is_maven=True),
                  dict(email='client@gmail.com', password=password, phone='8182222222', first_name='John',
-                      middle_name='H', last_name='Travolta', is_maven=False, addresses=[home_address, office_address])
+                      middle_name='H', last_name='Travolta', is_maven=False, addresses=[home_address, office_address], braintree_payment=client_payment)
                  ]
     user_datastore.create_user(**user_vals[0])
     user_datastore.create_user(**user_vals[1])
@@ -46,6 +58,7 @@ with app.app_context():
         obj = MavenAccountStatus()
         obj.name = status
         db.session.add(obj)
+
 
     db.session.add(order)
 

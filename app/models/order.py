@@ -21,6 +21,7 @@ class Order(db.Model):
     maven_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     maven = db.relationship('User', foreign_keys=[maven_id], backref=db.backref('accepted_orders'))
     order = db.Column(db.Text())
+    spending_limit = db.Column(db.Numeric(12, 2))
     special_instructions = db.Column(db.Text())
     pickup_address = db.Column(db.Text())
     order_address = db.Column(db.Text())
@@ -34,6 +35,7 @@ class Order(db.Model):
     created_at = db.Column(db.DateTime(), default=datetime.now)
     accepted_at = db.Column(db.DateTime())
     completed_at = db.Column(db.DateTime())
+    bt_transation_id = db.Column(db.String())
     coord = db.Column(Geometry("POINT"))
 
     @property
@@ -45,6 +47,7 @@ class Order(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'order': self.order,
+            'spending_limit': self.spending_limit,
             'special_instructions': self.special_instructions,
             'pickup_address': self.pickup_address,
             'order_address': self.order_address,
@@ -95,6 +98,10 @@ class Order(db.Model):
             self.completed_at = datetime.now()
             db.session.add(self)
             db.session.commit()
+
+            # self.user
+
+
             return True
         else:
             raise Exception('Invalid pin')

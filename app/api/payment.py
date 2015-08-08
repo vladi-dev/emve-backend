@@ -50,9 +50,6 @@ class PaymentAPI(MethodView):
                     }
                 }
             })
-            current_user.braintree_customer_id = result.customer.id
-            db.session.add(current_user)
-            db.session.commit()
 
         response = {}
         if result.is_success:
@@ -74,6 +71,7 @@ class PaymentAPI(MethodView):
                 payment_method.image_url = credit_card.image_url
                 payment_method.created_at = credit_card.created_at
 
+                current_user.braintree_customer_id = result.customer.id
                 current_user.braintree_payment = payment_method
 
                 db.session.add(current_user)

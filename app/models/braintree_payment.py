@@ -13,6 +13,9 @@ class BraintreePayment(db.Model):
     image_url = db.Column(db.String(255))
     created_at = db.Column(db.DateTime())
 
+    def __unicode__(self):
+        return self.token
+
     @property
     def serialize(self):
         return {

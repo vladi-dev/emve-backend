@@ -1,6 +1,7 @@
 import json
 from random import randrange
 
+import braintree
 from sqlalchemy import or_
 
 from flask import request, jsonify
@@ -44,11 +45,12 @@ class ClientOrdersAPI(MethodView):
     def put(self):
         data = request.get_json(force=True)
         order = data.get('order', None)
+        spending_limit = data.get('spending_limit', None)
         special_instructions = data.get('special_instructions', None)
         pickup_address = data.get('pickup_address', None)
         user_address_id = data.get('user_address_id', None)
 
-        if not all((order, special_instructions, pickup_address, user_address_id)):
+        if not all((order, spending_limit, special_instructions, pickup_address, user_address_id)):
             return jsonify({'error': 'Fill in all fields'}), 400
 
         try:
@@ -64,14 +66,29 @@ class ClientOrdersAPI(MethodView):
         except Exception as e:
             return jsonify({'error': 'Status NEW not found'}), 400
 
+        result = braintree.Transaction.sale({
+            "amount": spending_limit,
+            "payment_method_token": "3b88gr",
+            "service_fee_amount": "1.00",
+            "options": {
+                "submit_for_settlement": True
+            }
+        })
+
+        if not result.is_success:
+            return jsonify({'error': 'Transaction fail'})
+
         pin = randrange(1111,9999)
 
-        order = Order(order=order, special_instructions=special_instructions, pickup_address=pickup_address,
-                     status_id=status.id,
-                     user_id=current_user.id, order_address=user_address.__unicode__(), coord=user_address.coord,
-                     phone=current_user.phone, pin=pin)
+        order = Order(order=order, spending_limit=spending_limit, special_instructions=special_instructions,
+                      pickup_address=pickup_address,
+                      status_id=status.id,
+                      user_id=current_user.id, order_address=user_address.__unicode__(), coord=user_address.coord,
+                      phone=current_user.phone, pin=pin)
         db.session.add(order)
         db.session.commit()
+
+
 
         redis.publish(REDIS_CHAN, json.dumps({'event': 'maven:new_order', 'order': order.serialize}))
 
