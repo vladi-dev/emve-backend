@@ -7,7 +7,7 @@ from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
-from app import redis, REDIS_CHAN
+from app import redis_client, REDIS_CHAN
 from app.models.order import Order, OrderStatus, calculate_fees
 
 def maven_only(fn):
@@ -71,8 +71,8 @@ class MavenOrdersAPI(MethodView):
                 status_new = OrderStatus.getNew()
                 order = Order.query.filter_by(id=id, status_id=status_new.id).one()
                 order.accept(current_user)
-                redis.publish(REDIS_CHAN, json.dumps({'event': 'client:order_accepted', 'order': order.serialize, 'user_id': order.user_id}))
-                redis.publish(REDIS_CHAN, json.dumps({'event': 'maven:order_remove', 'order_id': order.id}))
+                redis_client.publish(REDIS_CHAN, json.dumps({'event': 'client:order_accepted', 'order': order.serialize, 'user_id': order.user_id}))
+                redis_client.publish(REDIS_CHAN, json.dumps({'event': 'maven:order_remove', 'order_id': order.id}))
                 return jsonify(order=order.serialize)
             elif act == 'complete':
                 status = OrderStatus.getAccepted()
@@ -86,7 +86,7 @@ class MavenOrdersAPI(MethodView):
                 if amount and pin:
                     try:
                         order.complete(int(pin), float(amount))
-                        redis.publish(REDIS_CHAN, json.dumps({'event': 'client:order_completed', 'order': order.serialize, 'user_id': order.user_id}))
+                        redis_client.publish(REDIS_CHAN, json.dumps({'event': 'client:order_completed', 'order': order.serialize, 'user_id': order.user_id}))
                         return jsonify({'success': 1})
                     except Exception as e:
                         return jsonify({'errors': {'_': e.__unicode__()}}), 400

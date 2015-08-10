@@ -8,7 +8,7 @@ from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt import jwt_required, current_user
 
-from app import db, redis, REDIS_CHAN
+from app import db, redis_client, REDIS_CHAN
 from app.models.order import Order, OrderStatus
 from app.models.user_address import UserAddress
 
@@ -51,48 +51,39 @@ class ClientOrdersAPI(MethodView):
         user_address_id = data.get('user_address_id', None)
 
         if not all((order, spending_limit, special_instructions, pickup_address, user_address_id)):
-            return jsonify({'error': 'Fill in all fields'}), 400
+            return jsonify({'error': 'Fill in all fields'}), 422
 
         try:
             user_address = UserAddress.query.filter_by(id=user_address_id, user_id=current_user.id).one()
         except Exception as e:
-            return jsonify({'error': 'Invalid user address id'}), 400
+            return jsonify({'error': 'Invalid user address id'}), 422
 
         if not current_user.phone:
-            return jsonify({'error': 'Invalid user phone'}), 400
+            return jsonify({'error': 'Invalid user phone'}), 422
 
-        try:
-            status = OrderStatus.query.filter_by(name='new').one()
-        except Exception as e:
-            return jsonify({'error': 'Status NEW not found'}), 400
-
-        result = braintree.Transaction.sale({
-            "amount": spending_limit,
-            "payment_method_token": "3b88gr",
-            "service_fee_amount": "1.00",
-            "options": {
-                "submit_for_settlement": True
-            }
-        })
-
-        if not result.is_success:
-            return jsonify({'error': 'Transaction fail'})
 
         pin = randrange(1111,9999)
 
-        order = Order(order=order, spending_limit=spending_limit, special_instructions=special_instructions,
-                      pickup_address=pickup_address,
-                      status_id=status.id,
-                      user_id=current_user.id, order_address=user_address.__unicode__(), coord=user_address.coord,
-                      phone=current_user.phone, pin=pin)
-        db.session.add(order)
+        new_order = Order()
+        new_order.statuses=OrderStatus.getNew()
+        new_order.order=order
+        new_order.spending_limit=spending_limit
+        new_order.special_instructions=special_instructions
+        new_order.pickup_address=pickup_address
+        new_order.user_id=current_user.id
+        new_order.order_address=user_address.__unicode__()
+        new_order.coord=user_address.coord
+        new_order.phone=current_user.phone,
+        new_order.pin=pin
+
+        db.session.add(new_order)
         db.session.commit()
 
 
 
-        redis.publish(REDIS_CHAN, json.dumps({'event': 'maven:new_order', 'order': order.serialize}))
+        redis_client.publish(REDIS_CHAN, json.dumps({'event': 'maven:new_order', 'order': new_order.serialize}))
 
-        return jsonify({'order': order.serialize})
+        return jsonify({'order': new_order.serialize})
 
     @classmethod
     def register(cls, mod):

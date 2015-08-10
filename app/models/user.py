@@ -51,6 +51,7 @@ class User(db.Model, UserMixin):
             'first_name': self.first_name,
             'middle_name': self.middle_name,
             'last_name': self.last_name,
+            'is_maven': self.is_maven
         }
 
     def get_maven_signup(self):
