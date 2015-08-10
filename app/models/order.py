@@ -19,8 +19,7 @@ class Order(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('orders'))
     status_id = db.Column(db.Integer, db.ForeignKey('order_statuses.id'))
-    # Rename to status
-    statuses = db.relationship('OrderStatus', backref=db.backref('orders'))
+    status = db.relationship('OrderStatus', backref=db.backref('orders'))
     maven_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     maven = db.relationship('User', foreign_keys=[maven_id], backref=db.backref('accepted_orders'))
     order = db.Column(db.Text())
@@ -58,7 +57,7 @@ class Order(db.Model):
             'pin': self.pin, # todo remove for maven
             'lat': lat,
             'lng': lng,
-            'status': self.statuses.serialize,
+            'status': self.status.serialize,
             'maven': self.maven.serialize if self.maven_id else None,
             'amount': str(self.amount),
             'total_fee': str(self.total_fee),

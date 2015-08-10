@@ -65,7 +65,7 @@ class ClientOrdersAPI(MethodView):
         pin = randrange(1111,9999)
 
         new_order = Order()
-        new_order.statuses=OrderStatus.getNew()
+        new_order.status=OrderStatus.getNew()
         new_order.order=order
         new_order.spending_limit=spending_limit
         new_order.special_instructions=special_instructions
