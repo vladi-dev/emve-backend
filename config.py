@@ -33,3 +33,6 @@ SECURITY_PASSWORD_SALT = 'n5ieDVxeTvHbiweuiwJo6w'
 # Map
 MAPBOX_MAP_ID = 'emve-dev.l8pjd86f'
 MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZW12ZS1kZXYiLCJhIjoiNWo4dEVUWSJ9._AFAtSxwrUNknqpVkzdYZw'
+
+# GCM
+GCM_KEY = "AIzaSyCOsEe_xWcu9gL7Agho1QaGgUXC1WnWlgk"

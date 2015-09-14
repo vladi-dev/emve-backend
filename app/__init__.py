@@ -13,6 +13,7 @@ from flask_cors import CORS
 from flask_jwt import JWT, current_user, verify_jwt, JWTError
 from flask_uwsgi_websocket import GeventWebSocket
 from flask_redis import FlaskRedis
+from flask_gcm import GCM
 
 
 # Create app
@@ -104,6 +105,66 @@ from app.websocket_service import WebsocketEventService
 
 ws_event_service = WebsocketEventService()
 ws_event_service.start()
+
+# GCM
+from gcmclient import PlainTextMessage, JSONMessage, GCMAuthenticationError
+gcm = GCM(app)
+# Construct (key => scalar) payload. do not use nested structures.
+data = {'message': 'Hello World', 'title': "My first notification"}
+
+# Unicast or multicast message, read GCM manual about extra options.
+# It is probably a good idea to always use JSONMessage, even if you send
+# a notification to just 1 registration ID.
+# unicast = PlainTextMessage("APA91bFozucDl9JLwbj4Xyfd8b13oR23dnBhLiXbjHsZ3t14gjA4Y5iFlE60pHEZ4wBIsR8IYxMNsSBYV9WtEcixca2fJKMT_tmC2uDu8U_PtbbdKrjVfcHtw1aVPeCAYudvAbfNrmZ2", data)
+multicast = JSONMessage(["APA91bF8h3gv_MyRVf-UHM6edqIc5nwTxYD_WD1uAnE252Km0XkXkOjChkVE0eKzuUD1-8G7eFUmzDKYI1b11nZMCW31BSW-4On80We6pN2Kx5Atfi0Xk8kz626x5hYfCUb_PfwAFA1w", "registration_id_2"], data, collapse_key='my.key', dry_run=False)
+
+try:
+    # attempt send
+    # res_unicast = gcm.send(unicast)
+    res_multicast = gcm.send(multicast)
+
+    # for res in [res_unicast, res_multicast]:
+    for res in [res_multicast]:
+        # nothing to do on success
+        for reg_id, msg_id in res.success.items():
+            print "Successfully sent %s as %s" % (reg_id, msg_id)
+
+        # update your registration ID's
+        for reg_id, new_reg_id in res.canonical.items():
+            print "Replacing %s with %s in database" % (reg_id, new_reg_id)
+
+        # probably app was uninstalled
+        for reg_id in res.not_registered:
+            print "Removing %s from database" % reg_id
+
+        # unrecoverably failed, these ID's will not be retried
+        # consult GCM manual for all error codes
+        for reg_id, err_code in res.failed.items():
+            print "Removing %s because %s" % (reg_id, err_code)
+
+        # if some registration ID's have recoverably failed
+        if res.needs_retry():
+            # construct new message with only failed regids
+            retry_msg = res.retry()
+            # you have to wait before attemting again. delay()
+            # will tell you how long to wait depending on your
+            # current retry counter, starting from 0.
+            print "Wait or schedule task after %s seconds" % res.delay(retry)
+            # retry += 1 and send retry_msg again
+
+except GCMAuthenticationError:
+    # stop and fix your settings
+    print "Your Google API key is rejected"
+except ValueError, e:
+    # probably your extra options, such as time_to_live,
+    # are invalid. Read error message for more info.
+    print "Invalid message/option or invalid GCM response"
+    print e.args[0]
+except Exception:
+    # your network is down or maybe proxy settings
+    # are broken. when problem is resolved, you can
+    # retry the whole message.
+    print "Something wrong with requests library"
 
 
 @app.route('/')
