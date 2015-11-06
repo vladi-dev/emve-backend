@@ -13,7 +13,7 @@ from flask.views import MethodView
 from flask_security.utils import encrypt_password
 from flask_jwt import generate_token
 
-from app import db, redis_store, user_datastore
+from app import db, redis_store, user_datastore, stripe
 from app.models.user import User
 
 
@@ -126,8 +126,15 @@ def _try_activate(data):
                 return jsonify({'errors': {'activation_code': 'Wrong activation code'}}), 422
 
             try:
+
+                # Create user
                 user = user_datastore.create_user(active=True, first_name=temp_user[1], last_name=temp_user[2], phone=temp_user[3],
                                                   email=temp_user[4], zip=temp_user[5], password=temp_user[6])
+
+                # Create Stripe Customer
+                customer = stripe.Customer.create(email=user.email)
+                user.stripe_customer_id = customer.id
+
                 db.session.commit()
 
                 # Generate JWT token to authenticate
@@ -141,6 +148,8 @@ def _try_activate(data):
 
             except IntegrityError as e:
                 return jsonify({'errors': {'activation_code': 'Email already in use'}}), 422
+            except Exception as e:
+                return jsonify({'errors': {'error': 'Something went wring'}}), 422
 
     return jsonify({'errors': {'activation_code': 'Activation code required'}}), 422
 

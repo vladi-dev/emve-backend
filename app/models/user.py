@@ -32,11 +32,11 @@ class User(db.Model, UserMixin):
     zip = db.Column(db.String(255))
     phone = db.Column(db.String(255))
     is_maven = db.Column(db.Boolean(), default=False)
-    braintree_payment_id = db.Column(db.Integer, db.ForeignKey('braintree_payments.id'))
-    braintree_payment = db.relationship('BraintreePayment', foreign_keys=[braintree_payment_id], backref=db.backref('users'))
-    braintree_customer_id = db.Column(db.String(255))
-    braintree_merchant_account_id = db.Column(db.String(255))
-    braintree_merchant_account_status = db.Column(db.String(255))
+    stripe_payment_id = db.Column(db.Integer, db.ForeignKey('stripe_payments.id'))
+    stripe_payment = db.relationship('StripePayment', foreign_keys=[stripe_payment_id], backref=db.backref('users'))
+    stripe_customer_id = db.Column(db.String(255))
+    # braintree_merchant_account_id = db.Column(db.String(255))
+    # braintree_merchant_account_status = db.Column(db.String(255))
 
     def __unicode__(self):
         return self.email
@@ -47,7 +47,7 @@ class User(db.Model, UserMixin):
             'id': self.id,
             'email': self.email,
             'full_name': "{} {} {}".format(self.first_name, self.middle_name, self.last_name),
-            'braintree_payment_id': self.braintree_payment_id,
+            # 'braintree_payment_id': self.braintree_payment_id,
             'first_name': self.first_name,
             'middle_name': self.middle_name,
             'last_name': self.last_name,
