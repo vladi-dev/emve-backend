@@ -1,9 +1,9 @@
 import re
+import time
 from datetime import datetime
-import braintree
 from dlnvalidation import is_valid as dl_is_valid
 
-from app import db
+from app import db, stripe
 
 sexes = {
     0: 'Not specified',
@@ -63,7 +63,7 @@ class MavenAccount(db.Model):
     status = db.relationship('MavenAccountStatus', foreign_keys=[status_id], backref=db.backref('maven_accounts'))
     decline_reason = db.Column(db.String(80))
     created_at = db.Column(db.DateTime(), default=datetime.now)
-    bt_merch_acc_id = db.Column(db.String(255))
+    stripe_account_id = db.Column(db.String(255))
     bt_merch_acc_status = db.Column(db.String(255))
     bt_merch_acc_decline_reason = db.Column(db.String(80))
 
@@ -76,9 +76,7 @@ class MavenAccount(db.Model):
         return False
 
     def can_decline(self):
-        if self.status == MavenAccountStatus.action_required():
-            return True
-        return False
+        return self.is_action_required()
 
     def approve(self):
         if not self.can_approve():
@@ -102,42 +100,67 @@ class MavenAccount(db.Model):
 
         return True
 
-    def create_merchant(self):
-        u = self.user
-        result = braintree.MerchantAccount.create({
-            'individual': {
-                'first_name': u.first_name,
-                'last_name': u.last_name,
-                'email': u.email,
-                'phone': u.phone,
-                'date_of_birth': self.dob,
-                'ssn': self.ssn,
-                'address': {
-                    'street_address': self.address,
-                    'locality': self.city,
-                    'region': self.state,
-                    'postal_code': self.zip
-                }
-            },
-            'funding': {
-                'destination': braintree.MerchantAccount.FundingDestination.Bank,
-                'account_number': self.account,
-                'routing_number': self.routing,
-            },
-            "tos_accepted": True,
-            "master_merchant_account_id": "nwts28jk5v8vpn37",
-        })
+    def create_merchant(self, ip):
+        if self.stripe_account_id:
+            raise Exception("Stripe account already exists")
 
-        if not result.is_success:
-            self.bt_merch_acc_decline_reason = ' '.join([e.message for e in result.errors.deep_errors])
-            self.status = MavenAccountStatus.action_required()
-        else:
-            self.bt_merch_acc_id = result.merchant_account.id
-            self.bt_merch_acc_status = result.merchant_account.status
-            self.status = MavenAccountStatus.pending()
+        stripe_account = stripe.Account.create(
+            managed=True,
+            country="US",
+            email=self.user.email,
+            legal_entity={
+                "dob": {
+                    "day": self.dob.day,
+                    "month": self.dob.month,
+                    "year": self.dob.year
+                },
+                "first_name": self.user.first_name,
+                "last_name": self.user.last_name,
+                "personal_address": {
+                    "city": self.city,
+                    "country": "US",
+                    # TODO add line2
+                    "line1": self.address,
+                    "postal_code": self.zip,
+                    "state": self.state
+                },
+                "personal_id_number": self.ssn, # TODO maybe use last 4 ssn
+                "type": "individual",
+
+            },
+            tos_acceptance={
+                "date": int(time.time()),
+                "ip": ip
+            },
+            external_account={
+                "object": "bank_account",
+                "account_number": self.account,
+                "country": "US",
+                "currency": "USD",
+                "routing_number": self.routing,
+            }
+        )
+
+        self.stripe_account_id = stripe_account.id
 
         db.session.add(self)
         db.session.commit()
+
+    @property
+    def serialize(self):
+        return {
+            'ssn_last4': self.ssn[-4:],
+            'dob': str(self.dob),
+            'dl_state': self.dl_state,
+            'dl_number': self.dl_number,
+            'sex': self.sex,
+            'account': self.account,
+            'routing': self.routing,
+            'address': self.address,
+            'city': self.city,
+            'state': self.state,
+            'zip': self.zip,
+        }
 
 
 class ValidationError(Exception):

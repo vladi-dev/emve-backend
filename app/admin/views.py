@@ -30,7 +30,7 @@ class SecureGeoModelView(SecureModelViewMixin, GeoModelView):
 class UserModelView(SecureModelView):
     inline_models = (Order,)
     form_ajax_refs = {
-        'braintree_payment': {
+        'stripe_payment': {
             'fields': ['token',],
             'page_size': 10
         }
