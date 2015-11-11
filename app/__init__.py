@@ -176,41 +176,44 @@ def home():
 
 
 """ Webhook for braintree gateway for notifications about submerchant account approval/denial """
-@app.route('/bt/submerchant', methods=('GET', 'POST'))
-def bt_submerchant():
-    try:
-        if request.method == 'GET':
-            return braintree.WebhookNotification.verify(request.args['bt_challenge'])
-
-        elif request.method == 'POST':
-            # Getting notification from braintree webhook
-            notification = braintree.WebhookNotification.parse(str(request.form['bt_signature']), request.form['bt_payload'])
-
-            # Finding maven signup related to this notification
-            maven_signup = MavenAccount.query\
-                .filter(MavenAccount.bt_merch_acc_id == notification.merchant_account.id)\
-                .filter(MavenAccount.status == MavenAccountStatus.pending())\
-                .one()
-
-            # Setting braintree merchant account status
-            maven_signup.bt_merch_acc_status = notification.kind
-
-            # Save decline reason if declined
-            if notification.kind == braintree.WebhookNotification.Kind.SubMerchantAccountDeclined:
-                # Setting maven signup status
-                maven_signup.bt_merch_acc_decline_reason = notification.message
-
-            # Setting maven signup status - require action from admin
-            maven_signup.status = MavenAccountStatus.action_required()
-
-            # Saving
-            db.session.add(maven_signup)
-            db.session.commit()
-
-    except Exception as ex:
-        pass
+@app.route('/stripe/webhooks', methods=('GET', 'POST'))
+def stripe_webhooks():
+    print request
 
     return Response(status=200)
+    # try:
+    #     if request.method == 'GET':
+    #         return braintree.WebhookNotification.verify(request.args['bt_challenge'])
+    #
+    #     elif request.method == 'POST':
+    #         # Getting notification from braintree webhook
+    #         notification = braintree.WebhookNotification.parse(str(request.form['bt_signature']), request.form['bt_payload'])
+    #
+    #         # Finding maven signup related to this notification
+    #         maven_signup = MavenAccount.query\
+    #             .filter(MavenAccount.stripe_account_id == notification.merchant_account.id)\
+    #             .filter(MavenAccount.status == MavenAccountStatus.pending())\
+    #             .one()
+    #
+    #         # Setting braintree merchant account status
+    #         maven_signup.bt_merch_acc_status = notification.kind
+    #
+    #         # Save decline reason if declined
+    #         if notification.kind == braintree.WebhookNotification.Kind.SubMerchantAccountDeclined:
+    #             # Setting maven signup status
+    #             maven_signup.bt_merch_acc_decline_reason = notification.message
+    #
+    #         # Setting maven signup status - require action from admin
+    #         maven_signup.status = MavenAccountStatus.action_required()
+    #
+    #         # Saving
+    #         db.session.add(maven_signup)
+    #         db.session.commit()
+    #
+    # except Exception as ex:
+    #     pass
+    #
+    # return Response(status=200)
 
 
 # Websocket url for event service

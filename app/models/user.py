@@ -47,11 +47,11 @@ class User(db.Model, UserMixin):
             'id': self.id,
             'email': self.email,
             'full_name': "{} {} {}".format(self.first_name, self.middle_name, self.last_name),
-            # 'braintree_payment_id': self.braintree_payment_id,
             'first_name': self.first_name,
             'middle_name': self.middle_name,
             'last_name': self.last_name,
-            'is_maven': self.is_maven
+            'is_maven': self.is_maven,
+            'maven_account': self.maven_accounts[0].serialize
         }
 
     def get_maven_signup(self):

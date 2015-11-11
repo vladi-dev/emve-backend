@@ -46,10 +46,10 @@ with app.app_context():
     maven_account.ssn = '123456789'
     maven_account.dl_state = 'CA'
     maven_account.dl_number = 'f1234567'
-    maven_account.dob = datetime.datetime.now()
+    maven_account.dob = datetime.date(year=1987, month=9, day=17)
     maven_account.sex = 1
     maven_account.felony = True
-    maven_account.account = '1234567'
+    maven_account.account = '000123456789'
     maven_account.routing = '111000025'
     maven_account.address = '15030 Ventura Blvd'
     maven_account.city = 'Sherman Oaks'

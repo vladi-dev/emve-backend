@@ -137,7 +137,7 @@ def _try_confirm(temp_maven_signup_id):
     db.session.commit()
 
     # TODO: load to queue for background processing
-    maven_signup.create_merchant()
+    maven_signup.create_merchant(request.remote_addr)
 
     return jsonify({'success': 1}), 200
 

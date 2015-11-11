@@ -98,14 +98,14 @@ def _try_signup(data):
     redis_store.expire(key, 86400) # Expire after 24h
 
     # Send activation code via SMS
-    client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
-
-    try:
-        message = client.messages.create(to=phone, from_="+13239094519",
-                                         body="Hello {}! Your activation code for Emve is: {}".format(first_name,
-                                                                                                      activation_code))
-    except TwilioRestException as e:
-        return jsonify({'errors': {'phone': 'Could not send activation code to specified phone number'}}), 422
+    # client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
+    #
+    # try:
+    #     message = client.messages.create(to=phone, from_="+13239094519",
+    #                                      body="Hello {}! Your activation code for Emve is: {}".format(first_name,
+    #                                                                                                   activation_code))
+    # except TwilioRestException as e:
+    #     return jsonify({'errors': {'phone': 'Could not send activation code to specified phone number'}}), 422
 
     return jsonify({'tempUserId': temp_user_id}), 200
 
@@ -149,7 +149,7 @@ def _try_activate(data):
             except IntegrityError as e:
                 return jsonify({'errors': {'activation_code': 'Email already in use'}}), 422
             except Exception as e:
-                return jsonify({'errors': {'error': 'Something went wring'}}), 422
+                return jsonify({'errors': {'error': 'Something went wring' + e}}), 422
 
     return jsonify({'errors': {'activation_code': 'Activation code required'}}), 422
 
