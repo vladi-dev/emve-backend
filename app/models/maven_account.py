@@ -64,16 +64,12 @@ class MavenAccount(db.Model):
     decline_reason = db.Column(db.String(80))
     created_at = db.Column(db.DateTime(), default=datetime.now)
     stripe_account_id = db.Column(db.String(255))
-    bt_merch_acc_status = db.Column(db.String(255))
-    bt_merch_acc_decline_reason = db.Column(db.String(80))
 
     def is_action_required(self):
         return self.status == MavenAccountStatus.action_required()
 
     def can_approve(self):
-        if self.status == MavenAccountStatus.action_required() and self.bt_merch_acc_status == 'sub_merchant_account_approved':
-            return True
-        return False
+        return self.is_action_required()
 
     def can_decline(self):
         return self.is_action_required()
@@ -124,7 +120,7 @@ class MavenAccount(db.Model):
                     "postal_code": self.zip,
                     "state": self.state
                 },
-                "personal_id_number": self.ssn, # TODO maybe use last 4 ssn
+                "personal_id_number": self.ssn,  # TODO maybe use last 4 ssn
                 "type": "individual",
 
             },
@@ -142,6 +138,7 @@ class MavenAccount(db.Model):
         )
 
         self.stripe_account_id = stripe_account.id
+        self.status = MavenAccountStatus.action_required()
 
         db.session.add(self)
         db.session.commit()
