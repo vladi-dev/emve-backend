@@ -91,7 +91,7 @@ adm = Admin(app, name='Emve', template_mode='bootstrap2')
 
 from admin.views import UserModelView, UserAddressModelView, OrderModelView, MavenAccountModelView
 
-adm.add_view(rediscli.RedisCli(redis_client))
+# adm.add_view(rediscli.RedisCli(redis_client))
 adm.add_view(UserModelView(db.session))
 adm.add_view(UserAddressModelView(db.session))
 adm.add_view(OrderModelView(db.session))
