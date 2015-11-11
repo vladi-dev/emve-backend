@@ -150,7 +150,7 @@ class MavenAccount(db.Model):
             'dob': str(self.dob),
             'dl_state': self.dl_state,
             'dl_number': self.dl_number,
-            'sex': self.sex,
+            'sex': sexes[self.sex],
             'account': self.account,
             'routing': self.routing,
             'address': self.address,
