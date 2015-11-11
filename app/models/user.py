@@ -53,7 +53,7 @@ class User(db.Model, UserMixin):
             'is_maven': self.is_maven
         }
 
-        if self.maven_accounts[0]:
+        if len(self.maven_accounts):
             r['maven_account'] = self.maven_accounts[0].serialize
 
         return r
