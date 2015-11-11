@@ -43,16 +43,20 @@ class User(db.Model, UserMixin):
 
     @property
     def serialize(self):
-        return {
+        r = {
             'id': self.id,
             'email': self.email,
             'full_name': "{} {} {}".format(self.first_name, self.middle_name, self.last_name),
             'first_name': self.first_name,
             'middle_name': self.middle_name,
             'last_name': self.last_name,
-            'is_maven': self.is_maven,
-            'maven_account': self.maven_accounts[0].serialize
+            'is_maven': self.is_maven
         }
+
+        if self.maven_accounts[0]:
+            r['maven_account'] = self.maven_accounts[0].serialize
+
+        return r
 
     def get_maven_signup(self):
         return MavenAccount.query.filter(MavenAccount.user_id == self.id).first()
