@@ -1,9 +1,7 @@
 from datetime import datetime
 from geoalchemy2 import Geometry, functions as geofunc
 
-import braintree
-
-from app import db
+from app import db, stripe
 
 def calculate_fees(amount):
     amount = float(amount)
@@ -37,7 +35,7 @@ class Order(db.Model):
     created_at = db.Column(db.DateTime(), default=datetime.now)
     accepted_at = db.Column(db.DateTime())
     completed_at = db.Column(db.DateTime())
-    bt_transaction_id = db.Column(db.String())
+    stripe_charge_id = db.Column(db.String())
     coord = db.Column(Geometry("POINT"))
 
     @property
@@ -65,7 +63,7 @@ class Order(db.Model):
             'maven_fee': str(self.maven_fee),
             'service_fee': str(self.service_fee),
             'completed_at': str(self.completed_at),
-            'bt_transaction_id': self.bt_transaction_id
+            'stripe_charge_id': self.stripe_charge_id
         }
 
     def accept(self, maven):
@@ -83,21 +81,23 @@ class Order(db.Model):
             raise Exception('You already have accepted another order')
 
         # Authorize transaction for maven
-        result = braintree.Transaction.sale({
-            "amount": self.spending_limit,
-            "payment_method_token": self.user.braintree_payment.token,
-            "merchant_account_id": maven.maven_accounts[0].bt_merch_acc_id,
-            "service_fee_amount": "2.00"
-        })
-
-        # TODO: decline order and notify user
-        # TODO: explain to maven why acceptance failed
-        if not result.is_success:
+        try:
+            charge = stripe.Charge.create(
+                amount=int(self.spending_limit * 100),
+                currency="USD",
+                application_fee="200", # TODO
+                capture=False,
+                destination=maven.maven_accounts[0].stripe_account_id,
+                customer=self.user.stripe_customer_id
+            )
+        except Exception as e:
+            # TODO: decline order and notify user
+            # TODO: explain to maven why acceptance failed
             from pprint import pprint
-            pprint(result)
+            pprint(e)
             raise Exception("Transaction failed")
 
-        self.bt_transaction_id = result.transaction.id
+        self.stripe_charge_id = charge.id
 
         self.status_id = status.id
         self.maven_id = maven.id
@@ -110,14 +110,14 @@ class Order(db.Model):
         if pin != self.pin:
             raise Exception('Invalid pin')
 
-        # self.user
-        result = braintree.Transaction.submit_for_settlement(self.bt_transaction_id, str(amount))
-
-        if not result.is_success:
-            raise Exception("Transaction settlement failed")
-
         fees = calculate_fees(amount)
         status = OrderStatus.getCompleted()
+
+        charge = stripe.Charge.retrieve(self.stripe_charge_id)
+        charge.capture(
+            amount=int(amount * 100),
+            application_fee=int(fees['total_fee'] * 100)
+        )
 
         self.status_id = status.id
         self.amount = fees['amount']
