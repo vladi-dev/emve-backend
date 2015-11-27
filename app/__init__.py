@@ -1,3 +1,4 @@
+import os
 import redis
 import gevent
 import json
@@ -16,6 +17,8 @@ from flask_jwt import JWT, current_user, verify_jwt, JWTError
 from flask_uwsgi_websocket import GeventWebSocket
 from flask_redis import FlaskRedis
 from flask_gcm import GCM
+
+print os.environ
 
 
 stripe.api_key = "sk_test_VZJCSB7IOkUFmDB8hEZBqiLg"
