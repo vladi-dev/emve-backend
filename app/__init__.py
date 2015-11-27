@@ -18,7 +18,6 @@ from flask_uwsgi_websocket import GeventWebSocket
 from flask_redis import FlaskRedis
 from flask_gcm import GCM
 
-print os.environ
 
 
 stripe.api_key = "sk_test_VZJCSB7IOkUFmDB8hEZBqiLg"
@@ -27,6 +26,8 @@ stripe.api_key = "sk_test_VZJCSB7IOkUFmDB8hEZBqiLg"
 app = Flask(__name__)
 ws = GeventWebSocket(app)
 app.config.from_object('config')
+
+app.logger.info(os.environ)
 
 REDIS_URL = 'redis://localhost:6379'
 REDIS_CHAN = 'track'
