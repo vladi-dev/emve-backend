@@ -1,7 +1,6 @@
 import json
 from random import randrange
 
-import braintree
 from sqlalchemy import or_
 
 from flask import request, jsonify
@@ -51,15 +50,19 @@ class ClientOrdersAPI(MethodView):
         user_address_id = data.get('user_address_id', None)
 
         if not all((order, spending_limit, special_instructions, pickup_address, user_address_id)):
-            return jsonify({'error': 'Fill in all fields'}), 422
+            return jsonify({'error': 'Fill in all fields'}), 400
 
         try:
             user_address = UserAddress.query.filter_by(id=user_address_id, user_id=current_user.id).one()
         except Exception as e:
-            return jsonify({'error': 'Invalid user address id'}), 422
+            return jsonify({'error': 'Invalid user address id'}), 400
 
-        if not current_user.phone:
-            return jsonify({'error': 'Invalid user phone'}), 422
+        try:
+            spending_limit = int(spending_limit)
+            if spending_limit <= 0:
+                raise ValueError
+        except ValueError:
+            return jsonify({'error': 'Invalid spending limit'}), 400
 
 
         pin = randrange(1111,9999)

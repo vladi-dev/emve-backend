@@ -32,15 +32,32 @@ class MavenOrdersAPI(MethodView):
                     if order.status_id != status.id:
                         return jsonify({'error': 'You cannot view that order'}), 400
 
-                amount = request.args.get('amount')
-                if amount is not None:
+                if request.args.has_key("amount"):
+                    try:
+                        amount = request.args.get("amount")
+
+                        print amount
+                        print type(amount)
+                        amount = float(amount)
+                        print amount
+                        print type(amount)
+
+                        if amount <= 0:
+                            raise ValueError
+                    except ValueError:
+                        return jsonify({"error": "Invalid amount"}), 400
+                    except TypeError:
+                        return jsonify({"error": "Amount is required"}), 400
+
                     status_accepted = OrderStatus.getAccepted()
+
                     if order.status_id == status_accepted.id:
-                        fees = calculate_fees(float(amount))
-                        return jsonify({'order': order.serialize, 'fees': fees})
+                        fees = calculate_fees(amount)
+                        return jsonify({"order": order.serialize, "fees": fees})
 
                 return jsonify(order=order.serialize)
             except Exception as e:
+                print type(e)
                 return jsonify({'error': 'Invalid order id'}), 400
 
         view = request.args.get('view')

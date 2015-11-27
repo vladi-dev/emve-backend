@@ -2,6 +2,7 @@ import redis
 import gevent
 import json
 import stripe
+from opbeat.contrib.flask import Opbeat
 
 from flask import Flask, render_template, jsonify, request, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -70,6 +71,18 @@ def load_user(payload):
 
 # CORS
 CORS(app)
+
+opbeat = Opbeat(
+    app,
+    organization_id='14a93322e6a54ce1afc2a671b21fa76f',
+    app_id='d90c97bed9',
+    secret_token='81a594d10d4d9c64b9cd8d2b5fdd737cc23d0ce6',
+    logging=True
+)
+
+opbeat.capture_message('hello, world!')
+
+
 
 # Database
 db = SQLAlchemy(app)
