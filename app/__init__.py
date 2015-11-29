@@ -1,4 +1,3 @@
-import os
 import redis
 import gevent
 import json
@@ -26,8 +25,6 @@ stripe.api_key = "sk_test_VZJCSB7IOkUFmDB8hEZBqiLg"
 app = Flask(__name__)
 ws = GeventWebSocket(app)
 app.config.from_object('config')
-
-app.logger.info(os.environ)
 
 REDIS_URL = 'redis://localhost:6379'
 REDIS_CHAN = 'track'
@@ -78,15 +75,8 @@ CORS(app)
 
 opbeat = Opbeat(
     app,
-    organization_id='14a93322e6a54ce1afc2a671b21fa76f',
-    app_id='d90c97bed9',
-    secret_token='81a594d10d4d9c64b9cd8d2b5fdd737cc23d0ce6',
     logging=True
 )
-
-opbeat.capture_message('hello, world!')
-
-
 
 # Database
 db = SQLAlchemy(app)
