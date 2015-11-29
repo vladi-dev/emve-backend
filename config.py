@@ -18,7 +18,7 @@ JWT_AUTH_URL_RULE = '/api/login'
 # CORS
 # TODO remove unnecessary headers
 CORS_HEADERS = ['Content-Type', 'Authorization', 'Origin', 'Content-Length', 'User-Agent', 'Accept',
-                              'Cache-Control', 'Pragma', 'Connection']
+                'Cache-Control', 'Pragma', 'Connection']
 CORS_RESOURCES = {r"*": {"origins": "*"}}
 
 # Security
@@ -36,3 +36,10 @@ MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZW12ZS1kZXYiLCJhIjoiNWo4dEVUWSJ9._AFAtSxwrUNkn
 
 # GCM
 GCM_KEY = "AIzaSyCOsEe_xWcu9gL7Agho1QaGgUXC1WnWlgk"
+
+OPBEAT = {
+    'ORGANIZATION_ID': '14a93322e6a54ce1afc2a671b21fa76f',
+    'APP_ID': 'd90c97bed9',
+    'SECRET_TOKEN': '81a594d10d4d9c64b9cd8d2b5fdd737cc23d0ce6',
+    'DEBUG': True
+}
